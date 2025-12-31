@@ -1,0 +1,30 @@
+<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <!-- Clipboard header -->
+  <rect x="16" y="3" width="16" height="8" rx="3" fill="#1a73e8"/>
+  <!-- Clipboard body -->
+  <rect x="8" y="8" width="32" height="34" rx="6" fill="#1a73e8"/>
+  <!-- Paper -->
+  <rect x="10" y="12" width="28" height="26" rx="4" fill="#ffffff" stroke="#1558b0" stroke-width="1.5"/>
+
+  <!-- Checklist items -->
+  <circle cx="14" cy="18" r="2" fill="#34a853"/>
+  <path d="M18 18h16" stroke="#1a73e8" stroke-width="2" stroke-linecap="round"/>
+
+  <circle cx="14" cy="24" r="2" fill="#34a853"/>
+  <path d="M18 24h16" stroke="#1a73e8" stroke-width="2" stroke-linecap="round"/>
+
+  <circle cx="14" cy="30" r="2" fill="#34a853"/>
+  <path d="M18 30h14" stroke="#1a73e8" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Pencil overlay -->
+  <g transform="translate(26,30) rotate(-20)">
+    <rect x="0" y="0" width="12" height="3" rx="1.5" fill="#fbbc05"/>
+    <polygon points="12,0 15,1.5 12,3" fill="#fbbc05"/>
+    <polygon points="15,1.5 17,1.5 15.6,2.6" fill="#5f6368"/>
+  </g>
+
+  <!-- People group (students/parents/teachers) -->
+  <circle cx="36" cy="40" r="3.2" fill="#1a73e8"/>
+  <circle cx="30" cy="40" r="2.4" fill="#1558b0"/>
+  <circle cx="42" cy="40" r="2.4" fill="#1558b0"/>
+</svg>

@@ -1,0 +1,43 @@
+/* Homework table */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.table th,
+.table td {
+  border: 1px solid #e5e7eb;
+  padding: 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+.table th {
+  background: #eef2ff;
+  color: #1f2937;
+}
+.table tbody tr:nth-child(even) td {
+  background: #fafafa;
+}
+.dark .table th {
+  background: #111827;
+  color: #e5e7eb;
+  border-color: #1f2937;
+}
+.dark .table td {
+  border-color: #1f2937;
+  color: #e5e7eb;
+}
+.dark .table tbody tr:nth-child(even) td {
+  background: #0b1324;
+}
+
+.table-header {
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+/* status icons removed from table */

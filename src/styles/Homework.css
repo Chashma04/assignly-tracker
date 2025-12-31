@@ -1,0 +1,84 @@
+/* Homework-related visuals */
+.homework-card {
+  text-align: left;
+}
+.homework-card h4 {
+  margin-bottom: 6px;
+}
+.homework-card p {
+  margin: 8px 0;
+  text-align: left;
+  font-weight: 500;
+}
+.homework-card small {
+  color: #666;
+}
+.dark .homework-card small,
+.dark .muted {
+  color: #94a3b8;
+}
+
+.hw-title {
+  color: #1a73e8;
+  font-weight: 700;
+}
+.dark .hw-title {
+  color: #93c5fd;
+}
+
+/* subject-badge removed */
+
+.status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+.status.pending {
+  background: #fff3cd;
+  color: #8a6d3b;
+  border: 1px solid #ffe69c;
+}
+.status.completed {
+  background: #d1e7dd;
+  color: #0f5132;
+  border: 1px solid #a3cfbb;
+}
+
+.row {
+  display: flex;
+  justify-content: flex-end;
+}
+.actions-row {
+  display: grid;
+}
+
+.homework-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px dashed #e0e0e0;
+}
+.homework-row:first-child {
+  border-top: none;
+}
+.hw-info {
+  display: flex;
+  flex-direction: column;
+}
+.muted {
+  color: #666;
+  font-size: 12px;
+}
+/* notes removed */
+
+/* AI explanation readability */
+.ai-explain .explain-content {
+  color: #333;
+}
+.dark .ai-explain .explain-content {
+  color: #e5e7eb;
+}

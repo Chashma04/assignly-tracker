@@ -1,70 +1,52 @@
+import { Edit } from "@mui/icons-material";
 import type { Homework } from "../type";
-import "../styles/Table.css";
+import DataTable, { type TableColumn, type TableAction } from "../components/DataTable";
 
 interface Props {
   homeworks: Homework[];
   showDescriptionTooltip?: boolean;
   onEdit?: (hw: Homework) => void;
+  showEditColumn?: boolean;
 }
-export default function HomeworkTable({ homeworks, showDescriptionTooltip = false, onEdit }: Props) {
+
+export default function HomeworkTable({ homeworks, showDescriptionTooltip = false, onEdit, showEditColumn = true }: Props) {
+  const columns: TableColumn<Homework>[] = [
+    {
+      key: 'subject',
+      label: 'Subject',
+    },
+    {
+      key: 'description',
+      label: 'Description',
+    },
+    {
+      key: 'teacher',
+      label: 'Teacher',
+      render: (value) => value || "-",
+    },
+    {
+      key: 'date',
+      label: 'Due Date',
+    },
+  ];
+
+  const actions: TableAction<Homework>[] = [];
+
+  if (showEditColumn && onEdit) {
+    actions.push({
+      label: 'Edit',
+      icon: <Edit fontSize="small" />,
+      onClick: (row) => onEdit(row),
+    });
+  }
+
   return (
-    <div className="card">
-      <div className="table-wrap">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Sl. No</th>
-              <th>Subject</th>
-              <th>Description</th>
-              <th>Teacher</th>
-              <th>Due Date</th>
-              <th>Edit</th>
-            </tr>
-          </thead>
-          <tbody>
-            {homeworks.length === 0 && (
-              <tr>
-                <td colSpan={6} style={{ textAlign: "center", padding: 12 }}>
-                  No homework
-                </td>
-              </tr>
-            )}
-            {homeworks.map((hw, idx) => {
-              const descTitle = showDescriptionTooltip && hw.description ? hw.description : undefined;
-              return (
-                <tr key={hw.id}>
-                  <td>{idx + 1}</td>
-                  <td>{hw.subject}</td>
-                  <td title={descTitle}>
-                    <div
-                      style={{
-                        maxWidth: 320,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {hw.description || "-"}
-                    </div>
-                  </td>
-                  <td>{hw.teacher || "-"}</td>
-                  <td>{hw.date}</td>
-                  <td>
-                    <button
-                      onClick={() => onEdit?.(hw)}
-                      style={{ padding: "4px 8px" }}
-                      title="Edit"
-                    >
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <DataTable
+      data={homeworks}
+      columns={columns}
+      actions={actions}
+      emptyMessage="No homework"
+    />
   );
 }
 

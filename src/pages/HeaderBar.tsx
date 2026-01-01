@@ -1,7 +1,27 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Menu,
+  MenuItem,
+  Avatar,
+  Box,
+  Button,
+  Switch,
+  FormControlLabel,
+} from "@mui/material";
+import {
+  Menu as MenuIcon,
+  Brightness4,
+  Brightness7,
+  AccountCircle,
+  AdminPanelSettings,
+  ArrowBack,
+} from "@mui/icons-material";
 import type { User } from "../type";
-import "../components/HeaderBar.css";
 
 interface Props {
   user: User | null;
@@ -11,9 +31,8 @@ interface Props {
 }
 
 export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [adminAuthed, setAdminAuthed] = useState(false);
-  const actionsRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -63,118 +82,145 @@ export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
     };
   }, []);
 
-  useEffect(() => {
-    const onClickOutside = (e: MouseEvent) => {
-      if (!menuOpen) return;
-      const target = e.target as Node;
-      if (actionsRef.current && !actionsRef.current.contains(target)) {
-        setMenuOpen(false);
-      }
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMenuOpen(false);
-    };
-    document.addEventListener("mousedown", onClickOutside);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onClickOutside);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [menuOpen]);
+  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    if (adminAuthed) {
+      try {
+        localStorage.removeItem("assignly_admin_authed");
+      } catch {}
+      try {
+        window.dispatchEvent(new CustomEvent("assignly:admin-auth", { detail: { authed: false } }));
+      } catch {}
+      if (isAdmin) navigate("/admin", { replace: true });
+    } else {
+      setUser(null);
+    }
+    handleClose();
+  };
+
+  const handleThemeToggle = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
 
   return (
-    <>
-      <div className="topbar flex items-center gap-3 px-4">
-        <div className="brand-area">
-          <div className="brand-row">
-            <img src="/logo.svg" alt="Assignly" className="logo" />
-            <div className="brand">Assignly</div>
-          </div>
-        </div>
-        <div
-          ref={actionsRef}
-          className="actions ml-auto flex items-center gap-2"
-        >
-          <button
-            className="link"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          >
-            {theme === "dark" ? "Light Mode" : "Dark Mode"}
-          </button>
-          {/* Hide Admin button when a teacher/student is logged in */}
+    <AppBar position="static" elevation={1}>
+      <Toolbar>
+        {/* Logo and Brand */}
+        <Box display="flex" alignItems="center" sx={{ flexGrow: 0 }}>
+          <img
+            src="/logo.svg"
+            alt="Assignly"
+            style={{ height: 32, marginRight: 12 }}
+            onError={(e) => {
+              // Fallback if logo doesn't exist
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
+            Assignly
+          </Typography>
+        </Box>
+
+        {/* Spacer */}
+        <Box sx={{ flexGrow: 1 }} />
+
+        {/* Actions */}
+        <Box display="flex" alignItems="center" gap={1}>
+          {/* Theme Toggle */}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={theme === "dark"}
+                onChange={handleThemeToggle}
+                icon={<Brightness7 />}
+                checkedIcon={<Brightness4 />}
+              />
+            }
+            label=""
+          />
+
+          {/* Admin/Back Navigation */}
           {!adminAuthed && (
             isAdmin ? (
-              <button className="link" onClick={() => navigate(backTarget)}>
+              <Button
+                color="inherit"
+                startIcon={<ArrowBack />}
+                onClick={() => navigate(backTarget)}
+              >
                 {backLabel}
-              </button>
+              </Button>
             ) : !user ? (
-              <button className="link" onClick={() => navigate("/admin")}>
+              <Button
+                color="inherit"
+                startIcon={<AdminPanelSettings />}
+                onClick={() => navigate("/admin")}
+              >
                 Admin
-              </button>
+              </Button>
             ) : null
           )}
+
+          {/* User Menu */}
           {(user || adminAuthed) && (
             <>
-              <button
-                className="user-trigger"
-                aria-label="User menu"
-                onClick={() => setMenuOpen((v) => !v)}
+              <IconButton
+                size="large"
+                aria-label="account of current user"
+                aria-controls="menu-appbar"
+                aria-haspopup="true"
+                onClick={handleMenu}
+                color="inherit"
               >
-                {adminAuthed ? "A" : getInitials(user?.name, user?.role)}
-              </button>
-              {menuOpen && (
-                <div className="user-menu">
-                  <div className="user-role">
-                    <span className="muted" style={{ fontWeight: 600, marginRight: 6 }}>Role:</span>
-                    <span
-                      className={`status ${adminAuthed ? "completed" : "pending"}`}
-                      style={{ textTransform: "capitalize" }}
-                    >
-                      {adminAuthed ? "Admin" : formatRole(user?.role)}
-                    </span>
-                  </div>
-                  {!adminAuthed && (
-                    <div className="user-name" style={{ marginTop: 6 }}>
-                      <span className="muted" style={{ fontWeight: 600 }}>User:</span>{" "}
-                      <span className="muted" style={{ fontWeight: 600 }}>
-                        {user?.name
-                          ? user.name
-                          : user?.rollNumber
-                          ? `Roll #${user.rollNumber}`
-                          : "User"}
-                      </span>
-                    </div>
-                  )}
-                  <div className="menu-sep" />
-                  <button
-                    className="menu-btn"
-                    onClick={() => {
-                      if (adminAuthed) {
-                        try {
-                          localStorage.removeItem("assignly_admin_authed");
-                        } catch {}
-                        try {
-                          window.dispatchEvent(new CustomEvent("assignly:admin-auth", { detail: { authed: false } }));
-                        } catch {}
-                        setMenuOpen(false);
-                        if (isAdmin) navigate("/admin", { replace: true });
-                        return;
-                      }
-                      setUser(null);
-                      setMenuOpen(false);
-                    }}
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
+                <Avatar sx={{ width: 32, height: 32, fontSize: '0.875rem' }}>
+                  {adminAuthed ? "A" : getInitials(user?.name, user?.role)}
+                </Avatar>
+              </IconButton>
+              <Menu
+                id="menu-appbar"
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+              >
+                <MenuItem disabled>
+                  <Typography variant="body2" color="textSecondary">
+                    Role: {adminAuthed ? "Admin" : formatRole(user?.role)}
+                  </Typography>
+                </MenuItem>
+                {!adminAuthed && (
+                  <MenuItem disabled>
+                    <Typography variant="body2" color="textSecondary">
+                      User: {user?.name
+                        ? user.name
+                        : user?.rollNumber
+                        ? `Roll #${user.rollNumber}`
+                        : "User"}
+                    </Typography>
+                  </MenuItem>
+                )}
+                <MenuItem onClick={handleLogout}>
+                  <Typography>Logout</Typography>
+                </MenuItem>
+              </Menu>
             </>
           )}
-        </div>
-      </div>
-      {/* Admin page is routed via /admin */}
-    </>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 }
-
-export {};

@@ -1,7 +1,24 @@
 import { useState } from "react";
+import {
+  Box,
+  Button,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  Radio,
+  RadioGroup,
+  TextField,
+  Typography,
+  Paper,
+  Container,
+} from "@mui/material";
 import type { Role, User } from "../type";
 import { getTeacherBySecrete, getStudentByRollAndDob } from "../services/db";
-import "../styles/Login.css";
+import PasswordField from "../components/PasswordField";
+import ErrorAlert from "../components/ErrorAlert";
+import LoadingButton from "../components/LoadingButton";
+import CenteredLayout from "../components/CenteredLayout";
+import FormCard from "../components/FormCard";
 
 interface Props {
   onLogin: (user: User) => void;
@@ -12,7 +29,7 @@ export default function Login({ onLogin }: Props) {
   const [pin, setPin] = useState("");
   const [secrete, setSecrete] = useState("");
   const [error, setError] = useState<string>("");
-  const [showPin, setShowPin] = useState(false);
+  const [loading, setLoading] = useState(false);
   // Student fields
   const [roll, setRoll] = useState("");
   const [dob, setDob] = useState("");
@@ -20,13 +37,15 @@ export default function Login({ onLogin }: Props) {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (role === "teacher") {
-      const secretKey = secrete.trim();
-      if (!secretKey) {
-        setError("Please enter Secrete.");
-        return;
-      }
-      try {
+    setLoading(true);
+
+    try {
+      if (role === "teacher") {
+        const secretKey = secrete.trim();
+        if (!secretKey) {
+          setError("Please enter Secrete.");
+          return;
+        }
         const record = await getTeacherBySecrete(pin, secretKey);
         if (!record) {
           setError("Invalid Secrete.");
@@ -48,123 +67,112 @@ export default function Login({ onLogin }: Props) {
           teacherId: record.id,
           assigned,
         });
-        return;
-      } catch (err) {
-        setError("Login failed. Please try again.");
-        return;
+      } else {
+        // Student login
+        const rollNumber = roll.trim();
+        const dateOfBirth = dob.trim();
+        if (!rollNumber || !dateOfBirth) {
+          setError("Please enter Roll Number and Date of Birth.");
+          return;
+        }
+        const record = await getStudentByRollAndDob(rollNumber, dateOfBirth);
+        if (!record) {
+          setError("Invalid Roll Number or Date of Birth.");
+          return;
+        }
+        onLogin({
+          role,
+          name: record.name,
+          rollNumber: record.rollNumber,
+          dob: record.dob,
+        });
       }
-    }
-    // Student validation: roll number + DOB
-    const rollOk = /^[0-9]{1,10}$/.test(roll);
-    if (!rollOk) {
-      setError("Please enter a valid numeric roll number (up to 10 digits).");
-      return;
-    }
-    if (!dob) {
-      setError("Please select your date of birth.");
-      return;
-    }
-    try {
-      const record = await getStudentByRollAndDob(roll.trim(), dob);
-      if (!record) {
-        setError("Invalid roll number or DOB.");
-        return;
-      }
-      onLogin({ role, rollNumber: record.rollNumber, dob: record.dob || dob, name: record.name });
     } catch (err) {
       setError("Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="container login-container">
-      <h2>Welcome to Assignly</h2>
-      <p>Sign in to continue</p>
-
-      <form className="card" onSubmit={submit}>
-        {role === "student" && (
-          <>
-            <input
-              placeholder="Roll Number"
-              value={roll}
-              onChange={(e) => setRoll(e.target.value)}
-              inputMode="numeric"
-            />
-            <input
-              type="date"
-              placeholder="Date of Birth"
-              value={dob}
-              onChange={(e) => setDob(e.target.value)}
-            />
-          </>
-        )}
-
-        <div style={{ marginTop: 12 }}>
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
-          >
-            <button
-              type="button"
-              className={role === "student" ? "secondary" : ""}
-              onClick={() => setRole("student")}
+    <CenteredLayout containerMaxWidth="sm" paper paperElevation={3}>
+      <FormCard title="Login to Assignly" subtitle="Enter your credentials to continue">
+        <Box component="form" onSubmit={submit} sx={{ width: '100%' }}>
+          <FormControl component="fieldset" sx={{ mb: 3 }}>
+            <FormLabel component="legend">Login as</FormLabel>
+            <RadioGroup
+              row
+              value={role}
+              onChange={(e) => setRole(e.target.value as Role)}
             >
-              Student (Roll + DOB)
-              {role === "student" && (
-                <span style={{ marginLeft: 6, fontSize: 12 }}>✓ Selected</span>
-              )}
-            </button>
-            <button
-              type="button"
-              className={role === "teacher" ? "secondary" : ""}
-              onClick={() => setRole("teacher")}
+              <FormControlLabel value="student" control={<Radio />} label="Student" />
+              <FormControlLabel value="teacher" control={<Radio />} label="Teacher" />
+            </RadioGroup>
+          </FormControl>
+
+          {role === "teacher" ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <TextField
+                label="Secrete"
+                value={secrete}
+                onChange={(e) => setSecrete(e.target.value)}
+                required
+                placeholder="Enter your secrete"
+                fullWidth
+              />
+              <PasswordField
+                label="PIN"
+                value={pin}
+                onChange={setPin}
+                required
+                placeholder="Enter your PIN"
+              />
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <TextField
+                label="Roll Number"
+                value={roll}
+                onChange={(e) => setRoll(e.target.value)}
+                required
+                placeholder="Enter your roll number"
+                fullWidth
+                inputMode="numeric"
+              />
+              <TextField
+                label="Date of Birth"
+                type="date"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+                required
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+              />
+            </Box>
+          )}
+
+          {error && (
+            <ErrorAlert
+              message={error}
+              severity="error"
+              onClose={() => setError("")}
+            />
+          )}
+
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+            <LoadingButton
+              type="submit"
+              variant="contained"
+              size="large"
+              loading={loading}
+              loadingText="Logging in..."
+              sx={{ minWidth: 120 }}
             >
-              Teacher
-              {role === "teacher" && (
-                <span style={{ marginLeft: 6, fontSize: 12 }}>✓ Selected</span>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {role === "teacher" && (
-          <div style={{ marginTop: 12 }}>
-            <input
-              placeholder="Secrete"
-              value={secrete}
-              onChange={(e) => setSecrete(e.target.value)}
-            />
-            <input
-              placeholder="Teacher PIN"
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              type={showPin ? "text" : "password"}
-            />
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button
-                type="button"
-                className="link"
-                onClick={() => setShowPin((v) => !v)}
-                style={{ width: "auto", marginTop: 8 }}
-              >
-                {showPin ? "Hide PIN" : "Show PIN"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div
-            className="bg-red-50 border border-red-200 text-red-700 rounded"
-            style={{ padding: 10, marginTop: 10, fontSize: 14 }}
-          >
-            {error}
-          </div>
-        )}
-
-        <button type="submit" style={{ marginTop: 16 }}>
-          Continue
-        </button>
-      </form>
-    </div>
+              Login
+            </LoadingButton>
+          </Box>
+        </Box>
+      </FormCard>
+    </CenteredLayout>
   );
 }

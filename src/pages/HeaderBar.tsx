@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import type { User } from "../type";
-import "./HeaderBar.css";
+import "../components/HeaderBar.css";
 
 interface Props {
   user: User | null;

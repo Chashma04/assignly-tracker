@@ -1,4 +1,4 @@
-import AdminPanel from "./AdminPanel";
+import AdminPanel from "../components/AdminPanel";
 
 export default function AdminPage() {
   return (

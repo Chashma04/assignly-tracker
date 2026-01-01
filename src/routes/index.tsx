@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
-import Login from "../components/Login";
-import AdminPage from "../components/AdminPage";
-import Sidenav from "../components/Sidenav";
-import TeacherDashboard from "../components/TeacherDashboard";
-import TeacherForm from "../components/TeacherForm";
-import StudentDashboard from "../components/StudentDashboard";
+import Login from "../pages/Login";
+import AdminPage from "../pages/AdminPage";
+import Sidenav from "../pages/Sidenav";
+import TeacherDashboard from "../pages/TeacherDashboard";
+import TeacherForm from "../pages/TeacherForm";
+import StudentDashboard from "../pages/StudentDashboard";
 import type { Homework, User } from "../type";
 
 interface CreateRoutesArgs {

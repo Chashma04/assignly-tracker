@@ -1,5 +1,5 @@
 import type { Role } from "../type";
-import "./Sidenav.css";
+import "../components/Sidenav.css";
 
 interface Props {
   role: Role;

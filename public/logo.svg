@@ -1,30 +1,73 @@
-<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="none">
-  <!-- Clipboard header -->
-  <rect x="16" y="3" width="16" height="8" rx="3" fill="#1a73e8"/>
-  <!-- Clipboard body -->
-  <rect x="8" y="8" width="32" height="34" rx="6" fill="#1a73e8"/>
-  <!-- Paper -->
-  <rect x="10" y="12" width="28" height="26" rx="4" fill="#ffffff" stroke="#1558b0" stroke-width="1.5"/>
-
-  <!-- Checklist items -->
-  <circle cx="14" cy="18" r="2" fill="#34a853"/>
-  <path d="M18 18h16" stroke="#1a73e8" stroke-width="2" stroke-linecap="round"/>
-
-  <circle cx="14" cy="24" r="2" fill="#34a853"/>
-  <path d="M18 24h16" stroke="#1a73e8" stroke-width="2" stroke-linecap="round"/>
-
-  <circle cx="14" cy="30" r="2" fill="#34a853"/>
-  <path d="M18 30h14" stroke="#1a73e8" stroke-width="2" stroke-linecap="round"/>
-
-  <!-- Pencil overlay -->
-  <g transform="translate(26,30) rotate(-20)">
-    <rect x="0" y="0" width="12" height="3" rx="1.5" fill="#fbbc05"/>
-    <polygon points="12,0 15,1.5 12,3" fill="#fbbc05"/>
-    <polygon points="15,1.5 17,1.5 15.6,2.6" fill="#5f6368"/>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" rx="110" fill="url(#bg)"/>
+  
+  <!-- Large Letter "A" in center -->
+  <g transform="translate(256, 280)">
+    <!-- "A" shape -->
+    <path d="M -100 80 L 0 -100 L 100 80 L 70 80 L 50 35 L -50 35 L -70 80 Z M -30 5 L 30 5 L 0 -55 Z" 
+          fill="#FFF" opacity="0.95"/>
   </g>
-
-  <!-- People group (students/parents/teachers) -->
-  <circle cx="36" cy="40" r="3.2" fill="#1a73e8"/>
-  <circle cx="30" cy="40" r="2.4" fill="#1558b0"/>
-  <circle cx="42" cy="40" r="2.4" fill="#1558b0"/>
+  
+  <!-- Teacher figure (left side, wearing graduation cap) -->
+  <g transform="translate(120, 150)">
+    <!-- Graduation cap -->
+    <rect x="-25" y="-15" width="50" height="8" rx="2" fill="#F59E0B"/>
+    <polygon points="-35,-15 35,-15 40,-25 -40,-25" fill="#F59E0B"/>
+    <circle cx="35" cy="-22" r="3" fill="#DC2626"/>
+    
+    <!-- Head -->
+    <circle cx="0" cy="10" r="20" fill="#FFF"/>
+    
+    <!-- Body -->
+    <path d="M -18 30 Q -18 25 0 25 Q 18 25 18 30 L 15 70 Q 15 75 0 75 Q -15 75 -15 70 Z" 
+          fill="#FFF"/>
+    
+    <!-- Arms (teaching gesture) -->
+    <path d="M -18 35 Q -30 40 -32 52" stroke="#FFF" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path d="M 18 35 Q 30 40 32 52" stroke="#FFF" stroke-width="6" stroke-linecap="round" fill="none"/>
+  </g>
+  
+  <!-- Student figure (right side, with backpack) -->
+  <g transform="translate(392, 180)">
+    <!-- Head -->
+    <circle cx="0" cy="0" r="18" fill="#FFF"/>
+    
+    <!-- Backpack straps -->
+    <path d="M -12 18 L -12 35" stroke="#FCD34D" stroke-width="5" stroke-linecap="round"/>
+    <path d="M 12 18 L 12 35" stroke="#FCD34D" stroke-width="5" stroke-linecap="round"/>
+    
+    <!-- Body -->
+    <path d="M -16 20 Q -16 18 0 18 Q 16 18 16 20 L 14 55 Q 14 60 0 60 Q -14 60 -14 55 Z" 
+          fill="#FFF"/>
+    
+    <!-- Backpack -->
+    <rect x="-18" y="28" width="36" height="30" rx="6" fill="#FCD34D" opacity="0.9"/>
+    <rect x="-10" y="35" width="20" height="3" rx="1.5" fill="#F59E0B"/>
+  </g>
+  
+  <!-- Connecting element - Book/Knowledge transfer -->
+  <g transform="translate(256, 140)">
+    <!-- Open book -->
+    <ellipse cx="0" cy="0" rx="45" ry="12" fill="#FFF" opacity="0.3"/>
+    <path d="M -40 0 Q -40 -15 -20 -25 L 0 -30 L 0 0 Z" fill="#FFF" opacity="0.9"/>
+    <path d="M 40 0 Q 40 -15 20 -25 L 0 -30 L 0 0 Z" fill="#FFF" opacity="0.9"/>
+    
+    <!-- Book pages lines -->
+    <line x1="-25" y1="-20" x2="-5" y2="-23" stroke="#3B82F6" stroke-width="1.5" opacity="0.4"/>
+    <line x1="-25" y1="-15" x2="-5" y2="-18" stroke="#3B82F6" stroke-width="1.5" opacity="0.4"/>
+    <line x1="25" y1="-20" x2="5" y2="-23" stroke="#3B82F6" stroke-width="1.5" opacity="0.4"/>
+    <line x1="25" y1="-15" x2="5" y2="-18" stroke="#3B82F6" stroke-width="1.5" opacity="0.4"/>
+  </g>
+  
+  <!-- Connection lines (knowledge transfer) -->
+  <path d="M 145 200 Q 200 160 256 155" stroke="#FFF" stroke-width="3" stroke-dasharray="8,8" opacity="0.5" fill="none"/>
+  <path d="M 367 200 Q 310 160 256 155" stroke="#FFF" stroke-width="3" stroke-dasharray="8,8" opacity="0.5" fill="none"/>
 </svg>

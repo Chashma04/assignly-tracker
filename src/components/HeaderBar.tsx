@@ -93,6 +93,18 @@ export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
+  const handleLogoClick = () => {
+    if (user || adminAuthed) {
+      // Log out user
+      if (adminAuthed) {
+        adminLogout();
+      }
+      setUser(null);
+    }
+    // Navigate to home/login
+    navigate(ROLE_ROUTES.HOME);
+  };
+
   return (
     <AppBar
       position="fixed"
@@ -110,9 +122,20 @@ export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
     >
       <Toolbar sx={{ minHeight: { xs: "56px", sm: "64px" } }}>
         {/* Logo and Brand */}
-        <Box display="flex" alignItems="center" sx={{ flexGrow: 0 }}>
+        <Box 
+          display="flex" 
+          alignItems="center" 
+          sx={{ 
+            flexGrow: 0,
+            cursor: "pointer",
+            "&:hover": {
+              opacity: 0.8,
+            },
+          }}
+          onClick={handleLogoClick}
+        >
           <img
-            src="/logo.svg"
+            src={`${process.env.PUBLIC_URL}/logo.svg`}
             alt="Assignly"
             style={{ height: 32, marginRight: 12 }}
             onError={(e) => {

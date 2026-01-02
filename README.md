@@ -3,13 +3,14 @@
 Assignly helps teachers post homework and students track and complete tasks — great for absent learners and everyday study routines. It is a simple, responsive UI built with Create React App.
 
 ## Features
+
 - Role-based views: Teacher and Student
 - Teacher: post homework (class, subject, description, due date)
 - Student: view tasks, mark as completed, add notes
 - Status badges and clean, mobile-first design
 - LocalStorage persistence (data remains across reloads)
 - Dark mode toggle
- - Optional AI: Gemini-powered homework explanations
+- Optional AI: Gemini-powered homework explanations
 
 ## Available Scripts
 
@@ -38,11 +39,11 @@ This app can optionally provide student-friendly explanations using Google Gemin
 1. Get an API key from Google AI Studio.
 2. Create `.env.local` at the project root and add:
 
-	REACT_APP_GEMINI_API_KEY=your_api_key_here
+   REACT_APP_GEMINI_API_KEY=your_api_key_here
 
 3. If needed, install the SDK:
 
-	pnpm add @google/generative-ai
+   pnpm add @google/generative-ai
 
 ### Usage
 

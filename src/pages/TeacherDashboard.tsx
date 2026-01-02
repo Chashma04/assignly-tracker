@@ -1,10 +1,4 @@
-import {
-  Box,
-  Typography,
-  Paper,
-  Chip,
-  Stack,
-} from "@mui/material";
+import { Box, Typography, Paper, Chip, Stack } from "@mui/material";
 import type { Homework, User } from "../type";
 import HomeworkTable from "./HomeworkTable";
 import { useFilteredHomeworks } from "../hooks/useFilteredHomeworks";
@@ -15,26 +9,34 @@ interface Props {
   onEdit?: (hw: Homework) => void;
 }
 
-export default function TeacherDashboard({
-  homeworks,
-  user,
-  onEdit,
-}: Props) {
+export default function TeacherDashboard({ homeworks, user, onEdit }: Props) {
   const filtered = useFilteredHomeworks(homeworks, user);
   const assignedLabels = (user?.assigned || []).map((a) =>
     a.section ? `${a.grade} ${a.section}` : a.grade
   );
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      <Paper elevation={2} sx={{ p: 3 }}>
+    <Box sx={{ width: "100%", px: { xs: 2, sm: 3 }, py: 2 }}>
+      <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
         <Typography variant="h4" component="h1" gutterBottom align="center">
           Teacher Dashboard
         </Typography>
 
         {assignedLabels.length > 0 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-            <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center">
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              mb: { xs: 2, sm: 3 },
+              flexWrap: "wrap",
+            }}
+          >
+            <Stack
+              direction="row"
+              spacing={1}
+              flexWrap="wrap"
+              justifyContent="center"
+            >
               <Typography variant="body2" color="textSecondary">
                 Assigned Classes:
               </Typography>
@@ -55,6 +57,7 @@ export default function TeacherDashboard({
           homeworks={filtered}
           showDescriptionTooltip={true}
           onEdit={onEdit}
+          showClassColumn={true}
         />
       </Paper>
     </Box>

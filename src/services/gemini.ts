@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { Homework } from "../type";
 
-const apiKey = 'AIzaSyCWUS_8H5sm3-R0lgYDM84ktkymG-Ea8IU';
+const apiKey = "AIzaSyCWUS_8H5sm3-R0lgYDM84ktkymG-Ea8IU";
 
 let genAI: GoogleGenerativeAI | null = null;
 if (apiKey) {
@@ -62,7 +62,7 @@ function prioritizeModels(models: string[]): string[] {
 export async function explainHomework(hw: Homework): Promise<string> {
   if (!genAI) {
     throw new Error(
-      "Gemini API key missing. Add REACT_APP_GEMINI_API_KEY in .env.local"
+      "Gemini API key missing. Add REACT_APP_GEMINI_API_KEY in .env.local",
     );
   }
 
@@ -78,7 +78,9 @@ export async function explainHomework(hw: Homework): Promise<string> {
     `Description: ${hw.description ?? "N/A"}`,
   ].join("\n");
 
-  const toTry = cachedModel ? [cachedModel, ...MODEL_CANDIDATES] : MODEL_CANDIDATES;
+  const toTry = cachedModel
+    ? [cachedModel, ...MODEL_CANDIDATES]
+    : MODEL_CANDIDATES;
   const tried: string[] = [];
   for (const m of toTry) {
     if (tried.includes(m)) continue;
@@ -97,7 +99,9 @@ export async function explainHomework(hw: Homework): Promise<string> {
         message.includes("not supported");
       const isAuth = message.includes("401") || message.includes("PERMISSION");
       if (isAuth) {
-        throw new Error("Gemini request unauthorized. Check your API key and access.");
+        throw new Error(
+          "Gemini request unauthorized. Check your API key and access.",
+        );
       }
       if (!isNotFound) {
         throw err;
@@ -126,6 +130,6 @@ export async function explainHomework(hw: Homework): Promise<string> {
     // If listing models fails, surface combined message below
   }
   throw new Error(
-    `No accessible Gemini model. Tried: ${tried.join(", ")}. Ensure the Generative Language API is enabled for your key, or use a server proxy.`
+    `No accessible Gemini model. Tried: ${tried.join(", ")}. Ensure the Generative Language API is enabled for your key, or use a server proxy.`,
   );
 }

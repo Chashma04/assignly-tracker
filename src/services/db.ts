@@ -39,20 +39,25 @@ export async function getTeachersFromFirestore() {
   return snap.docs.map((d) => d.data() as TeacherRecord);
 }
 
-export async function getTeacherById(id: string): Promise<TeacherRecord | null> {
+export async function getTeacherById(
+  id: string,
+): Promise<TeacherRecord | null> {
   const col = collection(db, "teachers");
   const ref = doc(col, id);
   const snap = await getDoc(ref);
   return snap.exists() ? (snap.data() as TeacherRecord) : null;
 }
 
-export async function getTeacherBySecrete(pin: string, secrete: string): Promise<TeacherRecord | null> {
+export async function getTeacherBySecrete(
+  pin: string,
+  secrete: string,
+): Promise<TeacherRecord | null> {
   const col = collection(db, "teachers");
   const q = query(
     col,
     where("secrete", "==", secrete),
     where("pin", "==", pin),
-    limit(1)
+    limit(1),
   );
   const snap = await getDocs(q);
   const docSnap = snap.docs[0];
@@ -76,7 +81,9 @@ export async function getStudentsFromFirestore() {
   return snap.docs.map((d) => d.data() as StudentRecord);
 }
 
-export async function getStudentByRoll(rollNumber: string): Promise<StudentRecord | null> {
+export async function getStudentByRoll(
+  rollNumber: string,
+): Promise<StudentRecord | null> {
   const col = collection(db, "students");
   const ref = doc(col, rollNumber);
   const snap = await getDoc(ref);
@@ -85,14 +92,14 @@ export async function getStudentByRoll(rollNumber: string): Promise<StudentRecor
 
 export async function getStudentByRollAndDob(
   rollNumber: string,
-  dob: string
+  dob: string,
 ): Promise<StudentRecord | null> {
   const col = collection(db, "students");
   const q = query(
     col,
     where("rollNumber", "==", rollNumber),
     where("dob", "==", dob),
-    limit(1)
+    limit(1),
   );
   const snap = await getDocs(q);
   const docSnap = snap.docs[0];
@@ -120,23 +127,25 @@ export async function fetchHomeworks(): Promise<Homework[]> {
 
 export async function isAdmin(adminSecrete: string): Promise<boolean> {
   const col = collection(db, "admin");
-  const ref = doc(col, adminSecrete);
+  const ref = doc(col, "admin-secret");
   const snap = await getDoc(ref);
-  return snap.exists();
+  if (!snap.exists()) return false;
+  const data = snap.data();
+  return data?.secret === adminSecrete;
 }
 
 export async function hasAnyAdminSecrets(): Promise<boolean> {
   const col = collection(db, "admin");
-  const q = query(col, limit(1));
-  const snap = await getDocs(q);
-  return !snap.empty;
+  const ref = doc(col, "admin-secret");
+  const snap = await getDoc(ref);
+  return snap.exists();
 }
 
 export async function addAdminSecret(secret: string): Promise<boolean> {
   try {
     const col = collection(db, "admin");
-    const ref = doc(col, secret);
-    await setDoc(ref, { createdAt: new Date() });
+    const ref = doc(col, "admin-secret");
+    await setDoc(ref, { secret, createdAt: new Date() });
     return true;
   } catch (error) {
     console.error("Error adding admin secret:", error);

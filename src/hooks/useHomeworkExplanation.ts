@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import type { Homework } from '../type';
-import { explainHomework } from '../services/gemini';
+import { useState } from "react";
+import type { Homework } from "../type";
+import { explainHomework } from "../services/gemini";
 
 export function useHomeworkExplanation() {
   const [isExplaining, setIsExplaining] = useState(false);

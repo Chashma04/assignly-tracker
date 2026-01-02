@@ -1,7 +1,10 @@
-import { useMemo } from 'react';
-import type { Homework, User } from '../type';
+import { useMemo } from "react";
+import type { Homework, User } from "../type";
 
-export function useFilteredHomeworks(homeworks: Homework[], user?: User | null) {
+export function useFilteredHomeworks(
+  homeworks: Homework[],
+  user?: User | null
+) {
   return useMemo(() => {
     if (!user?.assigned || user.assigned.length === 0) {
       return homeworks;

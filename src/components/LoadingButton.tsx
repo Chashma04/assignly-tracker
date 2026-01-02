@@ -1,11 +1,10 @@
-import React from 'react';
-import {
-  Button,
-  CircularProgress,
-  ButtonProps,
-} from '@mui/material';
+import React from "react";
+import { Button, CircularProgress, ButtonProps } from "@mui/material";
 
-interface LoadingButtonProps extends Omit<ButtonProps, 'startIcon' | 'endIcon'> {
+interface LoadingButtonProps extends Omit<
+  ButtonProps,
+  "startIcon" | "endIcon"
+> {
   loading?: boolean;
   loadingText?: string;
   startIcon?: React.ReactNode;

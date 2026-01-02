@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import type { Homework } from '../type';
-import { fetchHomeworks } from '../services/db';
+import { useState, useEffect } from "react";
+import type { Homework } from "../type";
+import { fetchHomeworks } from "../services/db";
 
 export function useHomeworks() {
   const [homeworks, setHomeworks] = useState<Homework[]>([]);

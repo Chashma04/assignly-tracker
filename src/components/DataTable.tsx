@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
   IconButton,
   Box,
   Typography,
-} from '@mui/material';
+} from "@mui/material";
 
 export interface TableColumn<T> {
   key: keyof T;
@@ -26,7 +26,7 @@ export interface TableAction<T> {
   label: string;
   icon?: React.ReactNode;
   onClick: (row: T) => void;
-  color?: 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
+  color?: "primary" | "secondary" | "error" | "info" | "success" | "warning";
 }
 
 interface DataTableProps<T> {
@@ -37,6 +37,7 @@ interface DataTableProps<T> {
   onSelectionChange?: (selected: T[]) => void;
   loading?: boolean;
   emptyMessage?: string;
+  showSerialNumber?: boolean;
 }
 
 export default function DataTable<T extends Record<string, any>>({
@@ -46,17 +47,18 @@ export default function DataTable<T extends Record<string, any>>({
   selectable = false,
   onSelectionChange,
   loading = false,
-  emptyMessage = 'No data available',
+  emptyMessage = "No data available",
+  showSerialNumber = false,
 }: DataTableProps<T>) {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [selected, setSelected] = React.useState<T[]>([]);
-  const [orderBy, setOrderBy] = React.useState<keyof T | ''>('');
-  const [order, setOrder] = React.useState<'asc' | 'desc'>('asc');
+  const [orderBy, setOrderBy] = React.useState<keyof T | "">("");
+  const [order, setOrder] = React.useState<"asc" | "desc">("asc");
 
   const handleRequestSort = (property: keyof T) => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
 
@@ -86,7 +88,7 @@ export default function DataTable<T extends Record<string, any>>({
     } else if (selectedIndex > 0) {
       newSelected = newSelected.concat(
         selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1),
+        selected.slice(selectedIndex + 1)
       );
     }
 
@@ -104,10 +106,10 @@ export default function DataTable<T extends Record<string, any>>({
       const bValue = b[orderBy];
 
       if (aValue < bValue) {
-        return order === 'asc' ? -1 : 1;
+        return order === "asc" ? -1 : 1;
       }
       if (aValue > bValue) {
-        return order === 'asc' ? 1 : -1;
+        return order === "asc" ? 1 : -1;
       }
       return 0;
     });
@@ -122,7 +124,9 @@ export default function DataTable<T extends Record<string, any>>({
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -136,26 +140,80 @@ export default function DataTable<T extends Record<string, any>>({
   }
 
   return (
-    <Paper>
-      <TableContainer>
-        <Table>
+    <Paper sx={{ width: "100%", overflow: "hidden" }}>
+      <TableContainer
+        sx={{
+          maxHeight: "calc(98vh - 280px)",
+          minHeight: "400px",
+          overflowX: "auto",
+        }}
+      >
+        <Table
+          stickyHeader
+          sx={{
+            "& .MuiTableCell-root": {
+              borderLeft: "none",
+              borderRight: "none",
+              borderBottom: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "1px solid rgba(255, 255, 255, 0.12)"
+                  : "1px solid rgba(0, 0, 0, 0.12)",
+            },
+          }}
+        >
           <TableHead>
-            <TableRow>
+            <TableRow
+              sx={{
+                borderBottom: "2px solid",
+                borderColor: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "rgba(255, 255, 255, 0.12)"
+                    : "rgba(0, 0, 0, 0.12)",
+              }}
+            >
+              {showSerialNumber && (
+                <TableCell
+                  sx={{
+                    fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                    fontWeight: "bold",
+                    backgroundColor: (theme) =>
+                      theme.palette.mode === "dark" ? "#1a2332" : "#fff",
+                  }}
+                >
+                  Sl No
+                </TableCell>
+              )}
               {selectable && (
-                <TableCell padding="checkbox">
+                <TableCell
+                  padding="checkbox"
+                  sx={{
+                    backgroundColor: (theme) =>
+                      theme.palette.mode === "dark" ? "#1a2332" : "#fff",
+                  }}
+                >
                   <Checkbox
-                    indeterminate={selected.length > 0 && selected.length < data.length}
+                    indeterminate={
+                      selected.length > 0 && selected.length < data.length
+                    }
                     checked={data.length > 0 && selected.length === data.length}
                     onChange={handleSelectAllClick}
                   />
                 </TableCell>
               )}
               {columns.map((column) => (
-                <TableCell key={String(column.key)}>
+                <TableCell
+                  key={String(column.key)}
+                  sx={{
+                    fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                    fontWeight: "bold",
+                    backgroundColor: (theme) =>
+                      theme.palette.mode === "dark" ? "#1a2332" : "#fff",
+                  }}
+                >
                   {column.sortable ? (
                     <TableSortLabel
                       active={orderBy === column.key}
-                      direction={orderBy === column.key ? order : 'asc'}
+                      direction={orderBy === column.key ? order : "asc"}
                       onClick={() => handleRequestSort(column.key)}
                     >
                       {column.label}
@@ -165,13 +223,32 @@ export default function DataTable<T extends Record<string, any>>({
                   )}
                 </TableCell>
               ))}
-              {actions.length > 0 && <TableCell>Actions</TableCell>}
+              {actions.length > 0 && (
+                <TableCell
+                  sx={{
+                    fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                    fontWeight: "bold",
+                    backgroundColor: (theme) =>
+                      theme.palette.mode === "dark" ? "#1a2332" : "#fff",
+                  }}
+                >
+                  Actions
+                </TableCell>
+              )}
             </TableRow>
           </TableHead>
           <TableBody>
             {paginatedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length + (selectable ? 1 : 0) + (actions.length > 0 ? 1 : 0)} align="center">
+                <TableCell
+                  colSpan={
+                    columns.length +
+                    (showSerialNumber ? 1 : 0) +
+                    (selectable ? 1 : 0) +
+                    (actions.length > 0 ? 1 : 0)
+                  }
+                  align="center"
+                >
                   <Typography variant="body2" color="textSecondary">
                     {emptyMessage}
                   </Typography>
@@ -186,28 +263,45 @@ export default function DataTable<T extends Record<string, any>>({
                     hover
                     onClick={() => handleClick(row)}
                     selected={isItemSelected}
-                    sx={{ cursor: selectable ? 'pointer' : 'default' }}
+                    sx={{
+                      cursor: selectable ? "pointer" : "default",
+                      borderBottom: "1px solid",
+                      borderColor: (theme) =>
+                        theme.palette.mode === "dark"
+                          ? "rgba(255, 255, 255, 0.12)"
+                          : "rgba(0, 0, 0, 0.12)",
+                    }}
                   >
+                    {showSerialNumber && (
+                      <TableCell
+                        sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+                      >
+                        {page * rowsPerPage + index + 1}
+                      </TableCell>
+                    )}
                     {selectable && (
                       <TableCell padding="checkbox">
                         <Checkbox checked={isItemSelected} />
                       </TableCell>
                     )}
                     {columns.map((column) => (
-                      <TableCell key={String(column.key)}>
+                      <TableCell
+                        key={String(column.key)}
+                        sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+                      >
                         {column.render
                           ? column.render(row[column.key], row)
-                          : String(row[column.key] || '')}
+                          : String(row[column.key] || "")}
                       </TableCell>
                     ))}
                     {actions.length > 0 && (
                       <TableCell>
-                        <Box display="flex" gap={1}>
+                        <Box display="flex" gap={0.5} justifyContent="center">
                           {actions.map((action, actionIndex) => (
                             <IconButton
                               key={actionIndex}
                               size="small"
-                              color={action.color || 'primary'}
+                              color={action.color || "primary"}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 action.onClick(row);

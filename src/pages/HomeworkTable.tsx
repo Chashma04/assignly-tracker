@@ -1,32 +1,51 @@
 import { Edit } from "@mui/icons-material";
 import type { Homework } from "../type";
-import DataTable, { type TableColumn, type TableAction } from "../components/DataTable";
+import DataTable, {
+  type TableColumn,
+  type TableAction,
+} from "../components/DataTable";
 
 interface Props {
   homeworks: Homework[];
   showDescriptionTooltip?: boolean;
   onEdit?: (hw: Homework) => void;
   showEditColumn?: boolean;
+  showClassColumn?: boolean;
 }
 
-export default function HomeworkTable({ homeworks, showDescriptionTooltip = false, onEdit, showEditColumn = true }: Props) {
+export default function HomeworkTable({
+  homeworks,
+  showDescriptionTooltip = false,
+  onEdit,
+  showEditColumn = true,
+  showClassColumn = false,
+}: Props) {
   const columns: TableColumn<Homework>[] = [
     {
-      key: 'subject',
-      label: 'Subject',
+      key: "subject",
+      label: "Subject",
     },
     {
-      key: 'description',
-      label: 'Description',
+      key: "description",
+      label: "Description",
     },
+    ...(showClassColumn
+      ? [
+          {
+            key: "className" as keyof Homework,
+            label: "Class",
+            render: (value: any) => value || "-",
+          },
+        ]
+      : []),
     {
-      key: 'teacher',
-      label: 'Teacher',
+      key: "teacher",
+      label: "Teacher",
       render: (value) => value || "-",
     },
     {
-      key: 'date',
-      label: 'Due Date',
+      key: "date",
+      label: "Due Date",
     },
   ];
 
@@ -34,7 +53,7 @@ export default function HomeworkTable({ homeworks, showDescriptionTooltip = fals
 
   if (showEditColumn && onEdit) {
     actions.push({
-      label: 'Edit',
+      label: "Edit",
       icon: <Edit fontSize="small" />,
       onClick: (row) => onEdit(row),
     });
@@ -46,6 +65,7 @@ export default function HomeworkTable({ homeworks, showDescriptionTooltip = fals
       columns={columns}
       actions={actions}
       emptyMessage="No homework"
+      showSerialNumber={true}
     />
   );
 }

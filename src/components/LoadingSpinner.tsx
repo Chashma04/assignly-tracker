@@ -1,31 +1,26 @@
-import React from 'react';
-import {
-  Box,
-  CircularProgress,
-  Typography,
-  BoxProps,
-} from '@mui/material';
+import React from "react";
+import { Box, CircularProgress, Typography, BoxProps } from "@mui/material";
 
 interface LoadingSpinnerProps extends BoxProps {
-  size?: number | 'small' | 'medium' | 'large';
+  size?: number | "small" | "medium" | "large";
   message?: string;
   fullScreen?: boolean;
 }
 
 export default function LoadingSpinner({
-  size = 'medium',
-  message = 'Loading...',
+  size = "medium",
+  message = "Loading...",
   fullScreen = false,
   ...boxProps
 }: LoadingSpinnerProps) {
   const getSize = () => {
-    if (typeof size === 'number') return size;
+    if (typeof size === "number") return size;
     switch (size) {
-      case 'small':
+      case "small":
         return 24;
-      case 'large':
+      case "large":
         return 64;
-      case 'medium':
+      case "medium":
       default:
         return 40;
     }

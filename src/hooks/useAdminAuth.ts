@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export function useAdminAuth() {
   const [adminAuthed, setAdminAuthed] = useState(false);
@@ -20,7 +20,10 @@ export function useAdminAuth() {
     window.addEventListener("assignly:admin-auth", onCustom as EventListener);
     return () => {
       window.removeEventListener("storage", onStorage);
-      window.removeEventListener("assignly:admin-auth", onCustom as EventListener);
+      window.removeEventListener(
+        "assignly:admin-auth",
+        onCustom as EventListener
+      );
     };
   }, []);
 

@@ -6,10 +6,12 @@ import {
   Paper,
   Select,
   TextField,
-  Typography
+  Typography,
 } from "@mui/material";
+import dayjs, { Dayjs } from "dayjs";
 import { useEffect, useState } from "react";
 import ErrorAlert from "../components/ErrorAlert";
+import DatePickerField from "../components/DatePickerField";
 import LoadingButton from "../components/LoadingButton";
 import { addHomework } from "../services/db";
 import type { Homework } from "../type";
@@ -38,16 +40,11 @@ export default function TeacherForm({
     description: "",
     date: "",
   });
+  const [dateValue, setDateValue] = useState<Dayjs | null>(null);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
-  const todayStr = (() => {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  })();
+  const today = dayjs();
 
   // Prefill form when editing an existing homework
   useEffect(() => {
@@ -58,8 +55,10 @@ export default function TeacherForm({
         description: editing.description,
         date: editing.date,
       });
+      setDateValue(editing.date ? dayjs(editing.date) : null);
     } else {
       setForm({ className: "", subject: "", description: "", date: "" });
+      setDateValue(null);
     }
   }, [editing]);
 
@@ -69,7 +68,7 @@ export default function TeacherForm({
       setError("Please fill all required fields.");
       return;
     }
-    if (new Date(date) < new Date(todayStr)) {
+    if (dayjs(date).isBefore(today, "day")) {
       setError("Due date cannot be in the past.");
       return;
     }
@@ -79,6 +78,19 @@ export default function TeacherForm({
 
     try {
       if (editing) {
+        // Check if anything has changed
+        const hasChanges =
+          editing.className !== form.className ||
+          editing.subject !== form.subject ||
+          editing.description !== form.description ||
+          editing.date !== form.date;
+
+        if (!hasChanges) {
+          setError("No changes detected.");
+          setLoading(false);
+          return;
+        }
+
         const updated: Homework = {
           ...editing,
           className: form.className,
@@ -88,7 +100,9 @@ export default function TeacherForm({
           teacher: teacherName ?? editing.teacher,
         };
         // Optimistic update
-        setHomeworks((prev) => prev.map((h) => (h.id === updated.id ? updated : h)));
+        setHomeworks((prev) =>
+          prev.map((h) => (h.id === updated.id ? updated : h)),
+        );
         try {
           const { updateHomework } = await import("../services/db");
           await updateHomework(updated);
@@ -126,24 +140,27 @@ export default function TeacherForm({
   };
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
+    <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
       <Paper elevation={2} sx={{ p: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center">
           {editing ? "Edit Homework" : "Post Homework"}
         </Typography>
 
-        <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Box
+          component="form"
+          sx={{ display: "flex", flexDirection: "column", gap: 3 }}
+        >
           {assigned && assigned.length > 0 ? (
             <FormControl fullWidth required>
               <InputLabel>Class</InputLabel>
               <Select
                 value={form.className}
                 label="Class"
-                onChange={(e) => setForm({ ...form, className: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, className: e.target.value })
+                }
               >
-                <MenuItem value="">
-                  <em>Select Grade/Section</em>
-                </MenuItem>
+                <MenuItem value="">Select Grade/Section</MenuItem>
                 {assigned.map((a, idx) => {
                   const label = a.section ? `${a.grade} ${a.section}` : a.grade;
                   return (
@@ -185,15 +202,19 @@ export default function TeacherForm({
             rows={4}
           />
 
-          <TextField
+          <DatePickerField
             label="Due Date"
-            type="date"
-            value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
+            value={dateValue}
+            onChange={(newValue) => {
+              setDateValue(newValue);
+              setForm({
+                ...form,
+                date: newValue ? newValue.format("YYYY-MM-DD") : "",
+              });
+            }}
+            minDate={today}
             required
             fullWidth
-            InputLabelProps={{ shrink: true }}
-            inputProps={{ min: todayStr }}
           />
 
           {error && (
@@ -204,7 +225,7 @@ export default function TeacherForm({
             />
           )}
 
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
             <LoadingButton
               variant="contained"
               size="large"

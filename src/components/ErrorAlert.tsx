@@ -1,16 +1,11 @@
-import React from 'react';
-import {
-  Alert,
-  AlertTitle,
-  Collapse,
-  IconButton,
-} from '@mui/material';
-import { Close } from '@mui/icons-material';
+import React from "react";
+import { Alert, AlertTitle, Collapse, IconButton } from "@mui/material";
+import { Close } from "@mui/icons-material";
 
 interface ErrorAlertProps {
   message: string;
   title?: string;
-  severity?: 'error' | 'warning' | 'info' | 'success';
+  severity?: "error" | "warning" | "info" | "success";
   onClose?: () => void;
   open?: boolean;
   autoHideDuration?: number;
@@ -19,7 +14,7 @@ interface ErrorAlertProps {
 export default function ErrorAlert({
   message,
   title,
-  severity = 'error',
+  severity = "error",
   onClose,
   open = true,
   autoHideDuration,

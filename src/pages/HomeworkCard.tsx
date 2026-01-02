@@ -4,13 +4,16 @@ import {
   Typography,
   Button,
   Box,
+  CircularProgress,
+  IconButton,
+  Collapse,
 } from "@mui/material";
-import { SmartToy } from "@mui/icons-material";
+import { SmartToy, ExpandMore, ExpandLess } from "@mui/icons-material";
 import type { Homework } from "../type";
 import ErrorAlert from "../components/ErrorAlert";
 import StatusChip from "../components/StatusChip";
-import LoadingSpinner from "../components/LoadingSpinner";
 import { useHomeworkExplanation } from "../hooks/useHomeworkExplanation";
+import { useState } from "react";
 
 interface Props {
   hw: Homework;
@@ -18,16 +21,26 @@ interface Props {
 }
 
 export default function HomeworkCard({ hw, onComplete }: Props) {
-  const { isExplaining, explanation, explainError, explain } = useHomeworkExplanation();
+  const { isExplaining, explanation, explainError, explain } =
+    useHomeworkExplanation();
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const handleExplain = async () => {
     await explain(hw);
+    setIsExpanded(true); // Auto-expand when new explanation arrives
   };
 
   return (
     <Card sx={{ mb: 2 }}>
       <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
           <StatusChip status={hw.status} />
         </Box>
 
@@ -43,33 +56,73 @@ export default function HomeworkCard({ hw, onComplete }: Props) {
           {hw.className} | Due: {hw.date}
         </Typography>
 
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
           <Button
             variant="outlined"
-            startIcon={isExplaining ? <LoadingSpinner size={16} /> : <SmartToy />}
+            startIcon={
+              isExplaining ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <SmartToy />
+              )
+            }
             onClick={handleExplain}
             disabled={isExplaining}
             size="small"
           >
             {isExplaining ? "Explaining..." : "Explain Homework (AI)"}
           </Button>
+          {explanation && (
+            <IconButton
+              onClick={() => setIsExpanded(!isExpanded)}
+              size="small"
+              sx={{ ml: 1 }}
+              title={isExpanded ? "Collapse explanation" : "Expand explanation"}
+            >
+              {isExpanded ? <ExpandLess /> : <ExpandMore />}
+            </IconButton>
+          )}
         </Box>
 
         {explainError && <ErrorAlert message={explainError} />}
 
         {explanation && (
-          <Box sx={{ mt: 2 }}>
-            <Card variant="outlined">
-              <CardContent sx={{ pb: 2 }}>
-                <Typography variant="h6" component="h3" gutterBottom>
-                  AI Explanation
-                </Typography>
-                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {explanation}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Box>
+          <Collapse in={isExpanded}>
+            <Box sx={{ mt: 2 }}>
+              <Card variant="outlined">
+                <CardContent sx={{ pb: 2 }}>
+                  <Typography variant="h6" component="h3" gutterBottom>
+                    AI Explanation
+                  </Typography>
+                  <Box
+                    sx={{
+                      maxHeight: "300px",
+                      overflowY: "auto",
+                      pr: 1,
+                      "&::-webkit-scrollbar": {
+                        width: "8px",
+                      },
+                      "&::-webkit-scrollbar-track": {
+                        backgroundColor: "action.hover",
+                        borderRadius: "4px",
+                      },
+                      "&::-webkit-scrollbar-thumb": {
+                        backgroundColor: "action.disabled",
+                        borderRadius: "4px",
+                        "&:hover": {
+                          backgroundColor: "action.active",
+                        },
+                      },
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+                      {explanation}
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
+          </Collapse>
         )}
       </CardContent>
     </Card>

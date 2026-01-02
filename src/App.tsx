@@ -1,22 +1,26 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useRoutes } from "react-router-dom";
+import { Box, Button, ThemeProvider } from "@mui/material";
+import CssBaseline from "@mui/material/CssBaseline";
 import HeaderBar from "./components/HeaderBar";
 import { useAdminAuth } from "./hooks/useAdminAuth";
 import { useAuth } from "./hooks/useAuth";
 import { useHomeworks } from "./hooks/useHomeworks";
 import { useTheme } from "./hooks/useTheme";
+import { useMuiTheme } from "./hooks/useMuiTheme";
 import { createRoutes } from "./routes";
-import "./styles/Controls.css";
-import "./styles/Layout.css";
 
 export default function App() {
   const { user, setUser } = useAuth();
   const { theme, setTheme } = useTheme();
   const { homeworks, setHomeworks } = useHomeworks();
   const [teacherTab, setTeacherTab] = useState<"dashboard" | "form">(
-    "dashboard"
+    "dashboard",
   );
   const { adminAuthed } = useAdminAuth();
+
+  // Create MUI theme based on current theme mode
+  const muiTheme = useMuiTheme(theme === "dark");
 
   // Ensure student always sees dashboard tab
   useEffect(() => {
@@ -28,8 +32,18 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const isAdmin = location.pathname.startsWith("/admin");
-  const backLabel = user?.role === "teacher" ? "Teacher" : user?.role === "student" ? "Student" : "Home";
-  const backTarget = user?.role === "teacher" ? "/teacher" : user?.role === "student" ? "/student" : "/";
+  const backLabel =
+    user?.role === "teacher"
+      ? "Teacher"
+      : user?.role === "student"
+        ? "Student"
+        : "Home";
+  const backTarget =
+    user?.role === "teacher"
+      ? "/teacher"
+      : user?.role === "student"
+        ? "/student"
+        : "/";
 
   const routing = useRoutes(
     createRoutes({
@@ -39,26 +53,65 @@ export default function App() {
       setHomeworks,
       teacherTab,
       setTeacherTab,
-    })
+    }),
   );
 
   return (
-    <div className="app">
-      <HeaderBar
-        user={user}
-        setUser={setUser}
-        theme={theme}
-        setTheme={setTheme}
-      />
+    <ThemeProvider theme={muiTheme}>
+      <CssBaseline />
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
+          width: "100%",
+          backgroundColor: "background.default",
+          transition: "background-color 0.3s ease",
+          overflow: "hidden",
+        }}
+      >
+        <HeaderBar
+          user={user}
+          setUser={setUser}
+          theme={theme}
+          setTheme={setTheme}
+        />
 
-      {isAdmin && !adminAuthed && (
-        <div className="page-back-wrap">
-          <button className="page-back" onClick={() => navigate(backTarget)}>
-            ← Back to {backLabel}
-          </button>
-        </div>
-      )}
-      <main className="main-area">{(routing as unknown) as React.ReactNode}</main>
-    </div>
+        <Box
+          component="main"
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            flex: 1,
+            width: "100%",
+            mt: { xs: "56px", sm: "64px" },
+            overflow: "auto",
+          }}
+        >
+          {isAdmin && !adminAuthed && (
+            <Box sx={{ display: "flex", px: { xs: 1, sm: 2 }, pt: 1, pb: 0 }}>
+              <Button
+                variant="text"
+                onClick={() => navigate(backTarget)}
+                sx={{
+                  color: "primary.main",
+                  textTransform: "none",
+                  fontSize: { xs: "0.85rem", sm: "0.95rem" },
+                  padding: 0,
+                  minWidth: "auto",
+                  "&:hover": {
+                    backgroundColor: "transparent",
+                    textDecoration: "underline",
+                  },
+                }}
+              >
+                ← Back to {backLabel}
+              </Button>
+            </Box>
+          )}
+          <Box>{routing as unknown as React.ReactNode}</Box>
+        </Box>
+      </Box>
+    </ThemeProvider>
   );
 }

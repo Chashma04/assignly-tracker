@@ -1,10 +1,6 @@
-import React, { useState } from 'react';
-import {
-  TextField,
-  InputAdornment,
-  IconButton,
-} from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import React, { useState } from "react";
+import { TextField, InputAdornment, IconButton } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 interface PasswordFieldProps {
   label?: string;
@@ -16,11 +12,11 @@ interface PasswordFieldProps {
   required?: boolean;
   disabled?: boolean;
   placeholder?: string;
-  size?: 'small' | 'medium';
+  size?: "small" | "medium";
 }
 
 export default function PasswordField({
-  label = 'Password',
+  label = "Password",
   value,
   onChange,
   error = false,
@@ -29,7 +25,7 @@ export default function PasswordField({
   required = false,
   disabled = false,
   placeholder,
-  size = 'medium',
+  size = "medium",
 }: PasswordFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -37,13 +33,15 @@ export default function PasswordField({
     setShowPassword(!showPassword);
   };
 
-  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleMouseDownPassword = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
     event.preventDefault();
   };
 
   return (
     <TextField
-      type={showPassword ? 'text' : 'password'}
+      type={showPassword ? "text" : "password"}
       label={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}

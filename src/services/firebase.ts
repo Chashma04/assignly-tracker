@@ -14,12 +14,14 @@ const firebaseConfig = {
   storageBucket: "assingly-6c446.firebasestorage.app",
   messagingSenderId: "1045859512404",
   appId: "1:1045859512404:web:22bb53e5b62957e423bdc1",
-  measurementId: "G-J350FZLCER"
+  measurementId: "G-J350FZLCER",
 };
 
 // Guard: ensure required keys exist to avoid runtime crashes
 if (!firebaseConfig.projectId) {
-  console.warn("Firebase not configured: missing REACT_APP_FIREBASE_* env vars");
+  console.warn(
+    "Firebase not configured: missing REACT_APP_FIREBASE_* env vars"
+  );
 }
 
 export const app = initializeApp(firebaseConfig);

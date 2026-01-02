@@ -2,18 +2,17 @@ import {
   AdminPanelSettings,
   ArrowBack,
   Brightness4,
-  Brightness7
+  Brightness7,
 } from "@mui/icons-material";
 import {
   AppBar,
   Avatar,
+  Badge,
   Box,
   Button,
-  FormControlLabel,
   IconButton,
   Menu,
   MenuItem,
-  Switch,
   Toolbar,
   Typography,
 } from "@mui/material";
@@ -35,8 +34,18 @@ export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
   const location = useLocation();
 
   const isAdmin = location.pathname.startsWith("/admin");
-  const backLabel = user?.role === "teacher" ? "Teacher" : user?.role === "student" ? "Student" : "Home";
-  const backTarget = user?.role === "teacher" ? "/teacher" : user?.role === "student" ? "/student" : "/";
+  const backLabel =
+    user?.role === "teacher"
+      ? "Teacher"
+      : user?.role === "student"
+        ? "Student"
+        : "Home";
+  const backTarget =
+    user?.role === "teacher"
+      ? "/teacher"
+      : user?.role === "student"
+        ? "/student"
+        : "/";
 
   const getInitials = (name?: string, role?: string) => {
     if (name && name.trim().length > 0) {
@@ -76,7 +85,10 @@ export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
     window.addEventListener("assignly:admin-auth", onCustom as EventListener);
     return () => {
       window.removeEventListener("storage", onStorage);
-      window.removeEventListener("assignly:admin-auth", onCustom as EventListener);
+      window.removeEventListener(
+        "assignly:admin-auth",
+        onCustom as EventListener
+      );
     };
   }, []);
 
@@ -94,7 +106,9 @@ export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
         localStorage.removeItem("assignly_admin_authed");
       } catch {}
       try {
-        window.dispatchEvent(new CustomEvent("assignly:admin-auth", { detail: { authed: false } }));
+        window.dispatchEvent(
+          new CustomEvent("assignly:admin-auth", { detail: { authed: false } })
+        );
       } catch {}
       if (isAdmin) navigate("/admin", { replace: true });
     } else {
@@ -108,8 +122,21 @@ export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
   };
 
   return (
-    <AppBar position="static" elevation={1}>
-      <Toolbar>
+    <AppBar
+      position="fixed"
+      color="primary"
+      elevation={2}
+      sx={{
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+        backgroundColor: "primary.main",
+        color: "#ffffff",
+        boxShadow: (theme) =>
+          theme.palette.mode === "dark"
+            ? "0 2px 8px rgba(0, 0, 0, 0.3)"
+            : "0 2px 4px rgba(0, 0, 0, 0.1)",
+      }}
+    >
+      <Toolbar sx={{ minHeight: { xs: "56px", sm: "64px" } }}>
         {/* Logo and Brand */}
         <Box display="flex" alignItems="center" sx={{ flexGrow: 0 }}>
           <img
@@ -118,10 +145,14 @@ export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
             style={{ height: 32, marginRight: 12 }}
             onError={(e) => {
               // Fallback if logo doesn't exist
-              e.currentTarget.style.display = 'none';
+              e.currentTarget.style.display = "none";
             }}
           />
-          <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{ fontWeight: "bold", display: { xs: "none", sm: "block" } }}
+          >
             Assignly
           </Typography>
         </Box>
@@ -130,27 +161,35 @@ export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
         <Box sx={{ flexGrow: 1 }} />
 
         {/* Actions */}
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box display="flex" alignItems="center" gap={{ xs: 0.5, sm: 1 }}>
           {/* Theme Toggle */}
-          <FormControlLabel
-            control={
-              <Switch
-                checked={theme === "dark"}
-                onChange={handleThemeToggle}
-                icon={<Brightness7 />}
-                checkedIcon={<Brightness4 />}
-              />
+          <IconButton
+            onClick={handleThemeToggle}
+            color="inherit"
+            size="small"
+            title={
+              theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
             }
-            label=""
-          />
+            sx={{
+              transition: "all 0.3s ease",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                transform: "rotate(20deg)",
+              },
+            }}
+          >
+            {theme === "dark" ? <Brightness7 /> : <Brightness4 />}
+          </IconButton>
 
           {/* Admin/Back Navigation */}
-          {!adminAuthed && (
-            isAdmin ? (
+          {!adminAuthed &&
+            (isAdmin ? (
               <Button
                 color="inherit"
                 startIcon={<ArrowBack />}
                 onClick={() => navigate(backTarget)}
+                size="small"
+                sx={{ display: { xs: "none", sm: "flex" } }}
               >
                 {backLabel}
               </Button>
@@ -159,11 +198,12 @@ export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
                 color="inherit"
                 startIcon={<AdminPanelSettings />}
                 onClick={() => navigate("/admin")}
+                size="small"
+                sx={{ display: { xs: "none", sm: "flex" } }}
               >
                 Admin
               </Button>
-            ) : null
-          )}
+            ) : null)}
 
           {/* User Menu */}
           {(user || adminAuthed) && (
@@ -175,22 +215,71 @@ export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
                 aria-haspopup="true"
                 onClick={handleMenu}
                 color="inherit"
+                sx={{
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  },
+                }}
               >
-                <Avatar sx={{ width: 32, height: 32, fontSize: '0.875rem' }}>
-                  {adminAuthed ? "A" : getInitials(user?.name, user?.role)}
-                </Avatar>
+                <Badge
+                  badgeContent={
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "25%",
+                        backgroundColor: "secondary.main",
+                        color: "secondary.contrastText",
+                        fontWeight: "bold",
+                        fontSize: "0.7rem",
+                        border: "2px solid white",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                      }}
+                    >
+                      {adminAuthed ? "A" : user?.role === "teacher" ? "T" : "S"}
+                    </Box>
+                  }
+                  overlap="circular"
+                  anchorOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                >
+                  <Avatar
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      fontSize: "1rem",
+                      fontWeight: "bold",
+                      background:
+                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                      color: "white",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                      cursor: "pointer",
+                      transition: "transform 0.2s ease",
+                      "&:hover": {
+                        transform: "scale(1.05)",
+                      },
+                    }}
+                  >
+                    {adminAuthed ? "A" : getInitials(user?.name, user?.role)}
+                  </Avatar>
+                </Badge>
               </IconButton>
               <Menu
                 id="menu-appbar"
                 anchorEl={anchorEl}
                 anchorOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
+                  vertical: "top",
+                  horizontal: "right",
                 }}
                 keepMounted
                 transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
+                  vertical: "top",
+                  horizontal: "right",
                 }}
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
@@ -203,11 +292,12 @@ export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
                 {!adminAuthed && (
                   <MenuItem disabled>
                     <Typography variant="body2" color="textSecondary">
-                      User: {user?.name
+                      User:{" "}
+                      {user?.name
                         ? user.name
                         : user?.rollNumber
-                        ? `Roll #${user.rollNumber}`
-                        : "User"}
+                          ? `Roll #${user.rollNumber}`
+                          : "User"}
                     </Typography>
                   </MenuItem>
                 )}

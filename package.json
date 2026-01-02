@@ -2,7 +2,7 @@
   "name": "assignly",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://chashma04.github.io/assignly",
+  "homepage": "https://chashma04.github.io/assignly-tracker",
   "packageManager": "pnpm@10.26.0",
   "dependencies": {
     "@emotion/react": "^11.14.0",

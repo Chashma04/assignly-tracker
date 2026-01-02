@@ -9,6 +9,13 @@ import {
 } from "@mui/material";
 import PasswordField from "./PasswordField";
 import { isAdmin, hasAnyAdminSecrets, addAdminSecret } from "../services/db";
+import {
+  STORAGE_KEYS,
+  CUSTOM_EVENTS,
+  ADMIN_AUTH_VALUE,
+  ERROR_MESSAGES,
+  VALIDATION,
+} from "../config/constants";
 
 interface Props {
   onLogin: () => void;
@@ -43,34 +50,36 @@ export default function AdminLogin({ onLogin, page = false }: Props) {
     try {
       const valid = await isAdmin(secrete);
       if (!valid) {
-        setNotice("Invalid admin secrete");
+        setNotice(ERROR_MESSAGES.INVALID_ADMIN_SECRETE);
         setNoticeType("error");
         return;
       }
       setNotice("");
       try {
-        localStorage.setItem("assignly_admin_authed", "1");
+        localStorage.setItem(STORAGE_KEYS.ADMIN_AUTHED, ADMIN_AUTH_VALUE);
       } catch {}
       try {
         window.dispatchEvent(
-          new CustomEvent("assignly:admin-auth", { detail: { authed: true } })
+          new CustomEvent(CUSTOM_EVENTS.ADMIN_AUTH, {
+            detail: { authed: true },
+          }),
         );
       } catch {}
       onLogin();
     } catch (error) {
-      setNotice("Error checking admin secrete");
+      setNotice(ERROR_MESSAGES.ERROR_CHECKING_ADMIN_SECRETE);
       setNoticeType("error");
     }
   };
 
   const handleSetupAdmin = async () => {
     if (!setupPassword.trim()) {
-      setNotice("Please enter an admin password");
+      setNotice(ERROR_MESSAGES.ADMIN_PASSWORD_REQUIRED);
       setNoticeType("error");
       return;
     }
-    if (setupPassword.length < 4) {
-      setNotice("Admin password must be at least 4 characters long");
+    if (setupPassword.length < VALIDATION.MIN_ADMIN_PASSWORD_LENGTH) {
+      setNotice(ERROR_MESSAGES.ADMIN_PASSWORD_TOO_SHORT);
       setNoticeType("error");
       return;
     }
@@ -78,7 +87,7 @@ export default function AdminLogin({ onLogin, page = false }: Props) {
       const success = await addAdminSecret(setupPassword.trim());
       if (success) {
         setNotice(
-          `Admin password has been set up successfully! Use "${setupPassword.trim()}" to login.`
+          `Admin password has been set up successfully! Use "${setupPassword.trim()}" to login.`,
         );
         setNoticeType("success");
         setShowSetup(false);

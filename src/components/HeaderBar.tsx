@@ -16,9 +16,11 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { User } from "../type";
+import { useAdminAuth } from "../hooks/useAdminAuth";
+import { ROLE_LABELS, ROLE_ROUTES, ROLE_INITIALS } from "../config/constants";
 
 interface Props {
   user: User | null;
@@ -29,23 +31,23 @@ interface Props {
 
 export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [adminAuthed, setAdminAuthed] = useState(false);
+  const { adminAuthed, logout: adminLogout } = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAdmin = location.pathname.startsWith("/admin");
+  const isAdmin = location.pathname.startsWith(ROLE_ROUTES.ADMIN);
   const backLabel =
     user?.role === "teacher"
-      ? "Teacher"
+      ? ROLE_LABELS.TEACHER
       : user?.role === "student"
-        ? "Student"
-        : "Home";
+        ? ROLE_LABELS.STUDENT
+        : ROLE_LABELS.HOME;
   const backTarget =
     user?.role === "teacher"
-      ? "/teacher"
+      ? ROLE_ROUTES.TEACHER
       : user?.role === "student"
-        ? "/student"
-        : "/";
+        ? ROLE_ROUTES.STUDENT
+        : ROLE_ROUTES.HOME;
 
   const getInitials = (name?: string, role?: string) => {
     if (name && name.trim().length > 0) {
@@ -56,41 +58,18 @@ export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
           ? parts[parts.length - 1]?.[0] || ""
           : parts[0]?.[1] || "";
       const initials = `${first}${last}`.toUpperCase();
-      return initials || (role === "teacher" ? "T" : "S");
+      return (
+        initials ||
+        (role === "teacher" ? ROLE_INITIALS.TEACHER : ROLE_INITIALS.STUDENT)
+      );
     }
-    return role === "teacher" ? "T" : "S";
+    return role === "teacher" ? ROLE_INITIALS.TEACHER : ROLE_INITIALS.STUDENT;
   };
 
   const formatRole = (role?: string) => {
     if (!role) return "";
     return role.charAt(0).toUpperCase() + role.slice(1);
   };
-
-  useEffect(() => {
-    try {
-      setAdminAuthed(localStorage.getItem("assignly_admin_authed") === "1");
-    } catch {}
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "assignly_admin_authed") {
-        setAdminAuthed(e.newValue === "1");
-      }
-    };
-    const onCustom = (e: Event) => {
-      const ev = e as CustomEvent;
-      if (ev && ev.detail && typeof ev.detail.authed === "boolean") {
-        setAdminAuthed(!!ev.detail.authed);
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("assignly:admin-auth", onCustom as EventListener);
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener(
-        "assignly:admin-auth",
-        onCustom as EventListener
-      );
-    };
-  }, []);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -102,15 +81,8 @@ export default function HeaderBar({ user, setUser, theme, setTheme }: Props) {
 
   const handleLogout = () => {
     if (adminAuthed) {
-      try {
-        localStorage.removeItem("assignly_admin_authed");
-      } catch {}
-      try {
-        window.dispatchEvent(
-          new CustomEvent("assignly:admin-auth", { detail: { authed: false } })
-        );
-      } catch {}
-      if (isAdmin) navigate("/admin", { replace: true });
+      adminLogout();
+      if (isAdmin) navigate(ROLE_ROUTES.ADMIN, { replace: true });
     } else {
       setUser(null);
     }

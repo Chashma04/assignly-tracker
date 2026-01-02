@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   Box,
   FormControl,
@@ -35,7 +35,7 @@ export default function DataFilter<T>({
         initial[filter.key] = "";
       });
       return initial;
-    }
+    },
   );
 
   const filterOptions = useMemo(() => {

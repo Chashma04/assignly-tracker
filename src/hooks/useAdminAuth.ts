@@ -1,14 +1,22 @@
 import { useState, useEffect } from "react";
+import {
+  STORAGE_KEYS,
+  CUSTOM_EVENTS,
+  ADMIN_AUTH_VALUE,
+} from "../config/constants";
 
 export function useAdminAuth() {
   const [adminAuthed, setAdminAuthed] = useState(false);
 
   useEffect(() => {
     try {
-      setAdminAuthed(localStorage.getItem("assignly_admin_authed") === "1");
+      setAdminAuthed(
+        localStorage.getItem(STORAGE_KEYS.ADMIN_AUTHED) === ADMIN_AUTH_VALUE,
+      );
     } catch {}
     const onStorage = (e: StorageEvent) => {
-      if (e.key === "assignly_admin_authed") setAdminAuthed(e.newValue === "1");
+      if (e.key === STORAGE_KEYS.ADMIN_AUTHED)
+        setAdminAuthed(e.newValue === ADMIN_AUTH_VALUE);
     };
     const onCustom = (e: Event) => {
       const ev = e as CustomEvent;
@@ -17,15 +25,31 @@ export function useAdminAuth() {
       }
     };
     window.addEventListener("storage", onStorage);
-    window.addEventListener("assignly:admin-auth", onCustom as EventListener);
+    window.addEventListener(
+      CUSTOM_EVENTS.ADMIN_AUTH,
+      onCustom as EventListener,
+    );
     return () => {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener(
-        "assignly:admin-auth",
-        onCustom as EventListener
+        CUSTOM_EVENTS.ADMIN_AUTH,
+        onCustom as EventListener,
       );
     };
   }, []);
 
-  return { adminAuthed, setAdminAuthed };
+  const logout = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.ADMIN_AUTHED);
+    } catch {}
+    try {
+      window.dispatchEvent(
+        new CustomEvent(CUSTOM_EVENTS.ADMIN_AUTH, {
+          detail: { authed: false },
+        }),
+      );
+    } catch {}
+  };
+
+  return { adminAuthed, setAdminAuthed, logout };
 }

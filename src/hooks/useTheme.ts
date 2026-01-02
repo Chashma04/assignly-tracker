@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
+import { STORAGE_KEYS } from "../config/constants";
 
 export function useTheme() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     try {
-      const savedTheme = localStorage.getItem("assignly_theme");
+      const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
       if (savedTheme === "dark" || savedTheme === "light") setTheme(savedTheme);
     } catch {}
   }, []);
@@ -18,7 +19,7 @@ export function useTheme() {
       root.classList.remove("dark");
     }
     try {
-      localStorage.setItem("assignly_theme", theme);
+      localStorage.setItem(STORAGE_KEYS.THEME, theme);
     } catch {}
   }, [theme]);
 

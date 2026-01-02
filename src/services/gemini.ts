@@ -1,28 +1,24 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { Homework } from "../type";
+import {
+  GEMINI_CONFIG,
+  GEMINI_PROMPT,
+  ERROR_MESSAGES,
+} from "../config/constants";
 
-const apiKey = "AIzaSyCWUS_8H5sm3-R0lgYDM84ktkymG-Ea8IU";
+const apiKey = GEMINI_CONFIG.API_KEY;
 
 let genAI: GoogleGenerativeAI | null = null;
 if (apiKey) {
   genAI = new GoogleGenerativeAI(apiKey);
 }
 
-const MODEL_CANDIDATES = [
-  "gemini-1.5-flash-latest",
-  "gemini-1.5-pro-latest",
-  "gemini-1.5-flash",
-  "gemini-1.5-pro",
-  "gemini-1.0-pro",
-  "gemini-pro",
-];
-
 let cachedModel: string | null = null;
 let cachedAvailableModels: string[] | null = null;
 
 async function listModelsFromAPI(): Promise<string[]> {
-  if (!apiKey) throw new Error("Missing API key for ListModels.");
-  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+  if (!apiKey) throw new Error(ERROR_MESSAGES.MISSING_API_KEY_FOR_LIST_MODELS);
+  const url = `${GEMINI_CONFIG.API_BASE_URL}/models?key=${apiKey}`;
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`ListModels failed: ${res.status} ${res.statusText}`);
@@ -44,7 +40,7 @@ async function getAvailableModels(): Promise<string[]> {
 function prioritizeModels(models: string[]): string[] {
   const tried = new Set<string>();
   const ordered: string[] = [];
-  for (const m of MODEL_CANDIDATES) {
+  for (const m of GEMINI_CONFIG.MODEL_CANDIDATES) {
     if (models.includes(m) && !tried.has(m)) {
       tried.add(m);
       ordered.push(m);
@@ -61,16 +57,14 @@ function prioritizeModels(models: string[]): string[] {
 
 export async function explainHomework(hw: Homework): Promise<string> {
   if (!genAI) {
-    throw new Error(
-      "Gemini API key missing. Add REACT_APP_GEMINI_API_KEY in .env.local",
-    );
+    throw new Error(ERROR_MESSAGES.GEMINI_API_KEY_MISSING);
   }
 
   const prompt = [
-    "You are a helpful tutor. Explain this homework clearly for a student.",
-    "Keep it concise, actionable, and encouraging.",
-    "Include: steps to approach, tips, and materials needed.",
-    "If information is missing, state reasonable assumptions and proceed.",
+    GEMINI_PROMPT.INTRO,
+    GEMINI_PROMPT.GUIDELINES,
+    GEMINI_PROMPT.INCLUDE,
+    GEMINI_PROMPT.ASSUMPTIONS,
     "\n---\n",
     `Subject: ${hw.subject}`,
     `Class: ${hw.className ?? "N/A"}`,
@@ -79,8 +73,8 @@ export async function explainHomework(hw: Homework): Promise<string> {
   ].join("\n");
 
   const toTry = cachedModel
-    ? [cachedModel, ...MODEL_CANDIDATES]
-    : MODEL_CANDIDATES;
+    ? [cachedModel, ...GEMINI_CONFIG.MODEL_CANDIDATES]
+    : [...GEMINI_CONFIG.MODEL_CANDIDATES];
   const tried: string[] = [];
   for (const m of toTry) {
     if (tried.includes(m)) continue;

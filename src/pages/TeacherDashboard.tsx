@@ -12,7 +12,7 @@ interface Props {
 export default function TeacherDashboard({ homeworks, user, onEdit }: Props) {
   const filtered = useFilteredHomeworks(homeworks, user);
   const assignedLabels = (user?.assigned || []).map((a) =>
-    a.section ? `${a.grade} ${a.section}` : a.grade
+    a.section ? `${a.grade} ${a.section}` : a.grade,
   );
 
   return (

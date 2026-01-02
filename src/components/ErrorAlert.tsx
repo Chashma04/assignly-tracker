@@ -19,29 +19,17 @@ export default function ErrorAlert({
   open = true,
   autoHideDuration,
 }: ErrorAlertProps) {
-  const [visible, setVisible] = React.useState(open);
-
   React.useEffect(() => {
-    setVisible(open);
-  }, [open]);
-
-  React.useEffect(() => {
-    if (autoHideDuration && visible) {
+    if (autoHideDuration && open) {
       const timer = setTimeout(() => {
-        setVisible(false);
         onClose?.();
       }, autoHideDuration);
       return () => clearTimeout(timer);
     }
-  }, [autoHideDuration, visible, onClose]);
-
-  const handleClose = () => {
-    setVisible(false);
-    onClose?.();
-  };
+  }, [autoHideDuration, open, onClose]);
 
   return (
-    <Collapse in={visible}>
+    <Collapse in={open}>
       <Alert
         severity={severity}
         action={
@@ -50,7 +38,7 @@ export default function ErrorAlert({
               aria-label="close"
               color="inherit"
               size="small"
-              onClick={handleClose}
+              onClick={onClose}
             >
               <Close fontSize="inherit" />
             </IconButton>

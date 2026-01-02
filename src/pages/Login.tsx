@@ -10,6 +10,7 @@ import ErrorAlert from "../components/ErrorAlert";
 import LoadingButton from "../components/LoadingButton";
 import CenteredLayout from "../components/CenteredLayout";
 import FormCard from "../components/FormCard";
+import { ERROR_MESSAGES } from "../config/constants";
 
 interface Props {
   onLogin: (user: User) => void;
@@ -35,17 +36,17 @@ export default function Login({ onLogin }: Props) {
       if (role === "teacher") {
         const secretKey = secrete.trim();
         if (!secretKey) {
-          setError("Please enter Secrete.");
+          setError(ERROR_MESSAGES.TEACHER_SECRETE_REQUIRED);
           return;
         }
         const record = await getTeacherBySecrete(pin, secretKey);
         if (!record) {
-          setError("Invalid Secrete.");
+          setError(ERROR_MESSAGES.INVALID_SECRETE);
           return;
         }
         // Pin already matched in query; keep a defensive check without env fallback
         if (!record.pin || pin !== record.pin) {
-          setError("Invalid teacher PIN.");
+          setError(ERROR_MESSAGES.INVALID_TEACHER_PIN);
           return;
         }
         const assigned = (record.sections || []).length
@@ -83,7 +84,7 @@ export default function Login({ onLogin }: Props) {
         });
       }
     } catch (err) {
-      setError("Login failed. Please try again.");
+      setError(ERROR_MESSAGES.LOGIN_FAILED);
     } finally {
       setLoading(false);
     }

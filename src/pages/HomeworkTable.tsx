@@ -1,9 +1,10 @@
 import { Edit } from "@mui/icons-material";
 import type { Homework } from "../type";
-import DataTable, {
-  type TableColumn,
-  type TableAction,
-} from "../components/DataTable";
+import DataTable, { type TableAction } from "../components/DataTable";
+import {
+  getHomeworkColumns,
+  TABLE_EMPTY_MESSAGES,
+} from "../config/tableColumns";
 
 interface Props {
   homeworks: Homework[];
@@ -20,34 +21,7 @@ export default function HomeworkTable({
   showEditColumn = true,
   showClassColumn = false,
 }: Props) {
-  const columns: TableColumn<Homework>[] = [
-    {
-      key: "subject",
-      label: "Subject",
-    },
-    {
-      key: "description",
-      label: "Description",
-    },
-    ...(showClassColumn
-      ? [
-          {
-            key: "className" as keyof Homework,
-            label: "Class",
-            render: (value: any) => value || "-",
-          },
-        ]
-      : []),
-    {
-      key: "teacher",
-      label: "Teacher",
-      render: (value) => value || "-",
-    },
-    {
-      key: "date",
-      label: "Due Date",
-    },
-  ];
+  const columns = getHomeworkColumns(showClassColumn);
 
   const actions: TableAction<Homework>[] = [];
 
@@ -64,7 +38,7 @@ export default function HomeworkTable({
       data={homeworks}
       columns={columns}
       actions={actions}
-      emptyMessage="No homework"
+      emptyMessage={TABLE_EMPTY_MESSAGES.NO_HOMEWORK}
       showSerialNumber={true}
     />
   );

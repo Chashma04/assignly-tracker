@@ -6,10 +6,6 @@ import {
   CardContent,
   Typography,
   Box,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Divider,
   Dialog,
   DialogContent,
@@ -25,6 +21,7 @@ import DataTable from "./DataTable";
 import FileInput from "./FileInput";
 import AdminLogin from "./AdminLogin";
 import DataFilter, { FilterConfig } from "./DataFilter";
+import { useAdminAuth } from "../hooks/useAdminAuth";
 import {
   parseTeachersExcel,
   parseStudentsExcel,
@@ -37,6 +34,19 @@ import {
   getTeachersFromFirestore,
   getStudentsFromFirestore,
 } from "../services/db";
+import {
+  STORAGE_KEYS,
+  ADMIN_TABS,
+  DEFAULT_ADMIN_TAB,
+  NOTICE_DISMISS_DURATION,
+  TEMPLATE_URLS,
+  EXCEL_SHEETS,
+} from "../config/constants";
+import {
+  TEACHER_COLUMNS,
+  STUDENT_COLUMNS,
+  TABLE_EMPTY_MESSAGES,
+} from "../config/tableColumns";
 
 interface Props {
   onClose?: () => void;
@@ -50,21 +60,21 @@ type Tab =
   | "students-list";
 
 export default function AdminPanel({ onClose, page = false }: Props) {
-  const [authed, setAuthed] = useState(false);
+  const { adminAuthed: authed, setAdminAuthed: setAuthed } = useAdminAuth();
   const [tab, setTab] = useState<Tab>(() => {
     try {
-      const stored = localStorage.getItem("assignly_admin_tab");
+      const stored = localStorage.getItem(STORAGE_KEYS.ADMIN_TAB);
       const allowed: Tab[] = [
-        "upload-students",
-        "upload-teachers",
-        "teachers-list",
-        "students-list",
+        ADMIN_TABS.UPLOAD_STUDENTS,
+        ADMIN_TABS.UPLOAD_TEACHERS,
+        ADMIN_TABS.TEACHERS_LIST,
+        ADMIN_TABS.STUDENTS_LIST,
       ];
       if (stored && (allowed as string[]).includes(stored)) {
         return stored as Tab;
       }
     } catch {}
-    return "teachers-list";
+    return DEFAULT_ADMIN_TAB;
   });
   const [notice, setNotice] = useState<string>("");
   const [noticeType, setNoticeType] = useState<"success" | "error" | "">("");
@@ -123,11 +133,11 @@ export default function AdminPanel({ onClose, page = false }: Props) {
           Boolean(
             item.sections &&
             Array.isArray(item.sections) &&
-            item.sections.includes(value)
+            item.sections.includes(value),
           ),
       },
     ],
-    []
+    [],
   );
 
   const studentFilters: FilterConfig<StudentRecord>[] = useMemo(
@@ -145,7 +155,7 @@ export default function AdminPanel({ onClose, page = false }: Props) {
         filterFn: (item, value) => item.className === value,
       },
     ],
-    []
+    [],
   );
 
   const handleUploadTeachers = async (file: File) => {
@@ -187,37 +197,9 @@ export default function AdminPanel({ onClose, page = false }: Props) {
     const timer = setTimeout(() => {
       setNotice("");
       setNoticeType("");
-    }, 3000);
+    }, NOTICE_DISMISS_DURATION);
     return () => clearTimeout(timer);
   }, [notice]);
-
-  useEffect(() => {
-    try {
-      if (localStorage.getItem("assignly_admin_authed") === "1") {
-        setAuthed(true);
-      }
-    } catch {}
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "assignly_admin_authed") {
-        setAuthed(e.newValue === "1");
-      }
-    };
-    const onCustom = (e: Event) => {
-      const ev = e as CustomEvent;
-      if (ev && ev.detail && typeof ev.detail.authed === "boolean") {
-        setAuthed(!!ev.detail.authed);
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("assignly:admin-auth", onCustom as EventListener);
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener(
-        "assignly:admin-auth",
-        onCustom as EventListener
-      );
-    };
-  }, []);
 
   // Fetch rosters on mount and when authed changes
   useEffect(() => {
@@ -228,7 +210,7 @@ export default function AdminPanel({ onClose, page = false }: Props) {
   // Persist selected admin tab
   useEffect(() => {
     try {
-      localStorage.setItem("assignly_admin_tab", tab);
+      localStorage.setItem(STORAGE_KEYS.ADMIN_TAB, tab);
     } catch {}
   }, [tab]);
 
@@ -298,8 +280,8 @@ export default function AdminPanel({ onClose, page = false }: Props) {
                 </ListItem>
                 <ListItem disablePadding>
                   <ListItemButton
-                    selected={tab === "teachers-list"}
-                    onClick={() => setTab("teachers-list")}
+                    selected={tab === ADMIN_TABS.TEACHERS_LIST}
+                    onClick={() => setTab(ADMIN_TABS.TEACHERS_LIST)}
                     sx={{
                       pl: { xs: 1, sm: 4 },
                       justifyContent: { xs: "center", sm: "flex-start" },
@@ -347,8 +329,8 @@ export default function AdminPanel({ onClose, page = false }: Props) {
                 </ListItem>
                 <ListItem disablePadding>
                   <ListItemButton
-                    selected={tab === "upload-teachers"}
-                    onClick={() => setTab("upload-teachers")}
+                    selected={tab === ADMIN_TABS.UPLOAD_TEACHERS}
+                    onClick={() => setTab(ADMIN_TABS.UPLOAD_TEACHERS)}
                     sx={{
                       pl: { xs: 1, sm: 4 },
                       justifyContent: { xs: "center", sm: "flex-start" },
@@ -413,8 +395,8 @@ export default function AdminPanel({ onClose, page = false }: Props) {
                 </ListItem>
                 <ListItem disablePadding>
                   <ListItemButton
-                    selected={tab === "students-list"}
-                    onClick={() => setTab("students-list")}
+                    selected={tab === ADMIN_TABS.STUDENTS_LIST}
+                    onClick={() => setTab(ADMIN_TABS.STUDENTS_LIST)}
                     sx={{
                       pl: { xs: 1, sm: 4 },
                       justifyContent: { xs: "center", sm: "flex-start" },
@@ -462,8 +444,8 @@ export default function AdminPanel({ onClose, page = false }: Props) {
                 </ListItem>
                 <ListItem disablePadding>
                   <ListItemButton
-                    selected={tab === "upload-students"}
-                    onClick={() => setTab("upload-students")}
+                    selected={tab === ADMIN_TABS.UPLOAD_STUDENTS}
+                    onClick={() => setTab(ADMIN_TABS.UPLOAD_STUDENTS)}
                     sx={{
                       pl: { xs: 1, sm: 4 },
                       justifyContent: { xs: "center", sm: "flex-start" },
@@ -521,13 +503,13 @@ export default function AdminPanel({ onClose, page = false }: Props) {
                 height: "100%",
               }}
             >
-              {tab === "upload-students" && (
+              {tab === ADMIN_TABS.UPLOAD_STUDENTS && (
                 <Card sx={{ p: 3, mb: 3 }}>
                   <CardContent>
                     <Typography variant="body1" sx={{ mb: 2 }}>
                       Please upload an Excel file with a sheet named{" "}
                       <Typography component="span" fontWeight="bold">
-                        Students
+                        {EXCEL_SHEETS.STUDENTS}
                       </Typography>
                       . The sheet must include the columns: Roll No, Name, DOB
                       (YYYY-MM-DD), Grade, Section.
@@ -561,7 +543,7 @@ export default function AdminPanel({ onClose, page = false }: Props) {
                       <Button
                         variant="outlined"
                         color="primary"
-                        href="/template/students-template.xlsx"
+                        href={TEMPLATE_URLS.STUDENTS}
                         download
                         sx={{ minWidth: "180px", whiteSpace: "nowrap" }}
                       >
@@ -572,13 +554,13 @@ export default function AdminPanel({ onClose, page = false }: Props) {
                 </Card>
               )}
 
-              {tab === "upload-teachers" && (
+              {tab === ADMIN_TABS.UPLOAD_TEACHERS && (
                 <Card sx={{ p: 3, mb: 3 }}>
                   <CardContent>
                     <Typography variant="body1" sx={{ mb: 2 }}>
                       Please upload an Excel file with a sheet named{" "}
                       <Typography component="span" fontWeight="bold">
-                        Teachers
+                        {EXCEL_SHEETS.TEACHERS}
                       </Typography>
                       . The sheet must include the columns: ID, Name, Class,
                       Section, Pin.
@@ -612,7 +594,7 @@ export default function AdminPanel({ onClose, page = false }: Props) {
                       <Button
                         variant="outlined"
                         color="primary"
-                        href="/template/teachers-template.xlsx"
+                        href={TEMPLATE_URLS.TEACHERS}
                         download
                         sx={{ minWidth: "180px", whiteSpace: "nowrap" }}
                       >
@@ -623,7 +605,7 @@ export default function AdminPanel({ onClose, page = false }: Props) {
                 </Card>
               )}
 
-              {tab === "teachers-list" && (
+              {tab === ADMIN_TABS.TEACHERS_LIST && (
                 <Card sx={{ mb: 1 }}>
                   <CardContent>
                     <DataFilter
@@ -634,32 +616,8 @@ export default function AdminPanel({ onClose, page = false }: Props) {
                       {(filteredData) => (
                         <DataTable
                           data={filteredData}
-                          columns={[
-                            { key: "id", label: "ID" },
-                            { key: "name", label: "Name" },
-                            {
-                              key: "grade",
-                              label: "Class",
-                              render: (value) => value || "-",
-                            },
-                            {
-                              key: "sections",
-                              label: "Section",
-                              render: (value) =>
-                                (value || []).join(", ") || "-",
-                            },
-                            {
-                              key: "pin",
-                              label: "Pin",
-                              render: (value) => value || "-",
-                            },
-                            {
-                              key: "secrete",
-                              label: "Secrete",
-                              render: (value) => value || "-",
-                            },
-                          ]}
-                          emptyMessage="No teachers"
+                          columns={TEACHER_COLUMNS}
+                          emptyMessage={TABLE_EMPTY_MESSAGES.NO_TEACHERS}
                         />
                       )}
                     </DataFilter>
@@ -667,7 +625,7 @@ export default function AdminPanel({ onClose, page = false }: Props) {
                 </Card>
               )}
 
-              {tab === "students-list" && (
+              {tab === ADMIN_TABS.STUDENTS_LIST && (
                 <Card sx={{ mb: 1 }}>
                   <CardContent>
                     <DataFilter
@@ -678,30 +636,8 @@ export default function AdminPanel({ onClose, page = false }: Props) {
                       {(filteredData) => (
                         <DataTable
                           data={filteredData}
-                          columns={[
-                            { key: "rollNumber", label: "Roll No." },
-                            {
-                              key: "name",
-                              label: "Name",
-                              render: (value) => value || "-",
-                            },
-                            {
-                              key: "dob",
-                              label: "DOB",
-                              render: (value) => value || "-",
-                            },
-                            {
-                              key: "className",
-                              label: "Class",
-                              render: (value) => (value || "-").trim() || "-",
-                            },
-                            {
-                              key: "section",
-                              label: "Section",
-                              render: (value) => (value || "-").trim() || "-",
-                            },
-                          ]}
-                          emptyMessage="No students"
+                          columns={STUDENT_COLUMNS}
+                          emptyMessage={TABLE_EMPTY_MESSAGES.NO_STUDENTS}
                         />
                       )}
                     </DataFilter>

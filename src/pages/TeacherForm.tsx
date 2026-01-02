@@ -15,6 +15,7 @@ import DatePickerField from "../components/DatePickerField";
 import LoadingButton from "../components/LoadingButton";
 import { addHomework } from "../services/db";
 import type { Homework } from "../type";
+import { ERROR_MESSAGES } from "../config/constants";
 
 interface Props {
   homeworks: Homework[];
@@ -65,11 +66,11 @@ export default function TeacherForm({
   const handleSubmit = async () => {
     const { className, subject, description, date } = form;
     if (!className || !subject || !description || !date) {
-      setError("Please fill all required fields.");
+      setError(ERROR_MESSAGES.ALL_FIELDS_REQUIRED);
       return;
     }
     if (dayjs(date).isBefore(today, "day")) {
-      setError("Due date cannot be in the past.");
+      setError(ERROR_MESSAGES.DUE_DATE_IN_PAST);
       return;
     }
 
@@ -86,7 +87,7 @@ export default function TeacherForm({
           editing.date !== form.date;
 
         if (!hasChanges) {
-          setError("No changes detected.");
+          setError(ERROR_MESSAGES.NO_CHANGES_DETECTED);
           setLoading(false);
           return;
         }

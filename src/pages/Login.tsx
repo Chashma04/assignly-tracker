@@ -1,16 +1,12 @@
 import { useState } from "react";
 import {
   Box,
-  Button,
   FormControl,
   FormControlLabel,
   FormLabel,
   Radio,
   RadioGroup,
   TextField,
-  Typography,
-  Paper,
-  Container,
 } from "@mui/material";
 import type { Role, User } from "../type";
 import { getTeacherBySecrete, getStudentByRollAndDob } from "../services/db";

@@ -117,3 +117,29 @@ export async function fetchHomeworks(): Promise<Homework[]> {
   const snap = await getDocs(q);
   return snap.docs.map((d) => d.data() as Homework);
 }
+
+export async function isAdmin(adminSecrete: string): Promise<boolean> {
+  const col = collection(db, "admin");
+  const ref = doc(col, adminSecrete);
+  const snap = await getDoc(ref);
+  return snap.exists();
+}
+
+export async function hasAnyAdminSecrets(): Promise<boolean> {
+  const col = collection(db, "admin");
+  const q = query(col, limit(1));
+  const snap = await getDocs(q);
+  return !snap.empty;
+}
+
+export async function addAdminSecret(secret: string): Promise<boolean> {
+  try {
+    const col = collection(db, "admin");
+    const ref = doc(col, secret);
+    await setDoc(ref, { createdAt: new Date() });
+    return true;
+  } catch (error) {
+    console.error("Error adding admin secret:", error);
+    return false;
+  }
+}

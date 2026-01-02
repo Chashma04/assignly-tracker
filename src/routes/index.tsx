@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
 import Login from "../pages/Login";
 import AdminPage from "../pages/AdminPage";
-import Sidenav from "../pages/Sidenav";
+import Sidenav from "../components/Sidenav";
 import TeacherDashboard from "../pages/TeacherDashboard";
 import TeacherForm from "../pages/TeacherForm";
 import StudentDashboard from "../pages/StudentDashboard";

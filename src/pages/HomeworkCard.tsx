@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,10 +7,10 @@ import {
 } from "@mui/material";
 import { SmartToy } from "@mui/icons-material";
 import type { Homework } from "../type";
-import { explainHomework } from "../services/gemini";
 import ErrorAlert from "../components/ErrorAlert";
 import StatusChip from "../components/StatusChip";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { useHomeworkExplanation } from "../hooks/useHomeworkExplanation";
 
 interface Props {
   hw: Homework;
@@ -19,21 +18,10 @@ interface Props {
 }
 
 export default function HomeworkCard({ hw, onComplete }: Props) {
-  const [isExplaining, setIsExplaining] = useState(false);
-  const [explanation, setExplanation] = useState<string | null>(null);
-  const [explainError, setExplainError] = useState<string | null>(null);
+  const { isExplaining, explanation, explainError, explain } = useHomeworkExplanation();
 
   const handleExplain = async () => {
-    setExplainError(null);
-    setIsExplaining(true);
-    try {
-      const text = await explainHomework(hw);
-      setExplanation(text);
-    } catch (err: any) {
-      setExplainError(err?.message || "Failed to generate explanation.");
-    } finally {
-      setIsExplaining(false);
-    }
+    await explain(hw);
   };
 
   return (

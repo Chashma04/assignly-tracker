@@ -1,6 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import "../styles/Admin.css";
-import "../styles/Login.css";
+import {
+  Button,
+  Alert,
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Divider,
+} from "@mui/material";
+import DataTable from "./DataTable";
+import PasswordField from "./PasswordField";
 import {
   parseTeachersExcel,
   parseStudentsExcel,
@@ -9,7 +22,7 @@ import {
   type TeacherRecord,
   type StudentRecord,
 } from "../services/roster";
-import { getTeachersFromFirestore, getStudentsFromFirestore } from "../services/db";
+import { getTeachersFromFirestore, getStudentsFromFirestore, isAdmin, hasAnyAdminSecrets, addAdminSecret } from "../services/db";
 
 interface Props {
   onClose?: () => void;
@@ -24,7 +37,7 @@ type Tab =
 
 export default function AdminPanel({ onClose, page = false }: Props) {
   const [authed, setAuthed] = useState(false);
-  const [pin, setPin] = useState("");
+  const [secrete, setSecrete] = useState("");
   const [tab, setTab] = useState<Tab>(() => {
     try {
       const stored = localStorage.getItem("assignly_admin_tab");
@@ -46,10 +59,28 @@ export default function AdminPanel({ onClose, page = false }: Props) {
   const [teacherFile, setTeacherFile] = useState<File | null>(null);
   const [uploadingStudents, setUploadingStudents] = useState(false);
   const [uploadingTeachers, setUploadingTeachers] = useState(false);
+  const [showSetup, setShowSetup] = useState(false);
+  const [setupPassword, setSetupPassword] = useState("");
   const studentInputRef = useRef<HTMLInputElement | null>(null);
   const teacherInputRef = useRef<HTMLInputElement | null>(null);
 
-  const adminPin = process.env.REACT_APP_ADMIN_PIN || "9999";
+  // Check if admin collection has any documents
+  useEffect(() => {
+    const checkAdminSetup = async () => {
+      try {
+        const hasAdmins = await hasAnyAdminSecrets();
+        if (!hasAdmins) {
+          setShowSetup(true);
+        }
+      } catch (error) {
+        console.error("Error checking admin setup:", error);
+        setShowSetup(true);
+      }
+    };
+    checkAdminSetup();
+  }, []);
+
+
 
   const [teachers, setTeachers] = useState<TeacherRecord[]>([]);
   const [students, setStudents] = useState<StudentRecord[]>([]);
@@ -84,22 +115,27 @@ export default function AdminPanel({ onClose, page = false }: Props) {
     return students.filter((s) => s.className === selectedGrade);
   }, [students, selectedGrade]);
 
-  const handleAuth = (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pin !== adminPin) {
-      setNotice("Invalid admin PIN");
-      return;
+    try {
+      const valid = await isAdmin(secrete);
+      if (!valid) {
+        setNotice("Invalid admin secrete");
+        return;
+      }
+      setAuthed(true);
+      setNotice("");
+      try {
+        localStorage.setItem("assignly_admin_authed", "1");
+      } catch {}
+      try {
+        window.dispatchEvent(
+          new CustomEvent("assignly:admin-auth", { detail: { authed: true } })
+        );
+      } catch {}
+    } catch (error) {
+      setNotice("Error checking admin secrete");
     }
-    setAuthed(true);
-    setNotice("");
-    try {
-      localStorage.setItem("assignly_admin_authed", "1");
-    } catch {}
-    try {
-      window.dispatchEvent(
-        new CustomEvent("assignly:admin-auth", { detail: { authed: true } })
-      );
-    } catch {}
   };
 
   const handleUploadTeachers = async (file: File) => {
@@ -135,20 +171,6 @@ export default function AdminPanel({ onClose, page = false }: Props) {
       setStudentFile(null);
       if (studentInputRef.current) studentInputRef.current.value = "";
     }
-  };
-
-  const handleLogout = () => {
-    setAuthed(false);
-    setPin("");
-    setNotice("");
-    try {
-      localStorage.removeItem("assignly_admin_authed");
-    } catch {}
-    try {
-      window.dispatchEvent(
-        new CustomEvent("assignly:admin-auth", { detail: { authed: false } })
-      );
-    } catch {}
   };
 
   useEffect(() => {
@@ -202,21 +224,85 @@ export default function AdminPanel({ onClose, page = false }: Props) {
     } catch {}
   }, [tab]);
 
-  const loginForm = (
-    <form onSubmit={handleAuth} className="card admin-login">
-      <input
-        type="password"
-        placeholder="Admin PIN"
-        value={pin}
-        onChange={(e) => setPin(e.target.value)}
-      />
-      <button type="submit">Continue</button>
-      {notice && (
-        <small className="muted" style={{ color: "#d33" }}>
-          {notice}
-        </small>
-      )}
-    </form>
+  const handleSetupAdmin = async () => {
+    if (!setupPassword.trim()) {
+      setNotice("Please enter an admin password");
+      setNoticeType("error");
+      return;
+    }
+    if (setupPassword.length < 4) {
+      setNotice("Admin password must be at least 4 characters long");
+      setNoticeType("error");
+      return;
+    }
+    try {
+      const success = await addAdminSecret(setupPassword.trim());
+      if (success) {
+        setNotice(`Admin password has been set up successfully! Use "${setupPassword.trim()}" to login.`);
+        setNoticeType("success");
+        setShowSetup(false);
+        setSetupPassword("");
+      } else {
+        setNotice("Failed to set up admin password. Check console for errors.");
+        setNoticeType("error");
+      }
+    } catch (error) {
+      setNotice("Error setting up admin password.");
+      setNoticeType("error");
+    }
+  };
+
+  const loginForm = showSetup ? (
+    <Card sx={{ maxWidth: 400, mx: "auto" }}>
+      <CardContent>
+        <Alert severity="info" sx={{ mb: 2 }}>
+          <Typography variant="body2">
+            <strong>Admin Setup Required:</strong> No admin password found. Please create your admin password below.
+          </Typography>
+        </Alert>
+        <PasswordField
+          label="Create admin password"
+          value={setupPassword}
+          onChange={setSetupPassword}
+        />
+        <Button
+          fullWidth
+          variant="contained"
+          onClick={handleSetupAdmin}
+          size="large"
+        >
+          Set Up Admin Password
+        </Button>
+        {notice && (
+          <Alert severity={noticeType === "success" ? "success" : "error"} sx={{ mt: 2 }}>
+            {notice}
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
+  ) : (
+    <Card sx={{ maxWidth: 400, mx: "auto" }}>
+      <CardContent>
+        <PasswordField
+          label="Admin Password"
+          value={secrete}
+          onChange={setSecrete}
+        />
+        <Button
+          fullWidth
+          variant="contained"
+          onClick={handleAuth}
+          size="large"
+        >
+          Continue
+        </Button>
+        {notice && (
+          <Alert severity={noticeType === "success" ? "success" : "error"} sx={{ mt: 2 }}>
+            {notice}
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
   );
 
   const content = (
@@ -225,268 +311,245 @@ export default function AdminPanel({ onClose, page = false }: Props) {
         page ? (
           <div className="container login-container">
             <h2>Admin Access</h2>
-            <p>Sign in with your PIN</p>
+            <p>Sign in with your Secrete</p>
             {loginForm}
           </div>
         ) : (
           loginForm
         )
       ) : (
-        <div className="admin-layout">
-          <div
-            className="sidenav admin-sidenav"
+        <Box sx={{ display: 'flex', height: '100vh' }}>
+          <Box
+            component="nav"
+            sx={{
+              width: 200,
+              p: 2,
+              borderRight: 1,
+              borderColor: 'divider',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1
+            }}
             role="navigation"
             aria-label="Admin Navigation"
           >
-            <button
-              className={`side-item ${tab === "teachers-list" ? "active" : ""}`}
+            <Button
+              variant={tab === "teachers-list" ? "contained" : "outlined"}
               onClick={() => setTab("teachers-list")}
-              title="Teachers List"
+              fullWidth
+              sx={{ justifyContent: 'flex-start' }}
             >
               Teachers List
-            </button>
-            <button
-              className={`side-item ${
-                tab === "upload-teachers" ? "active" : ""
-              }`}
+            </Button>
+            <Button
+              variant={tab === "upload-teachers" ? "contained" : "outlined"}
               onClick={() => setTab("upload-teachers")}
-              title="Upload Teachers"
+              fullWidth
+              sx={{ justifyContent: 'flex-start' }}
             >
               Upload Teachers
-            </button>
-            <div className="admin-sep" />
-            <button
-              className={`side-item ${tab === "students-list" ? "active" : ""}`}
+            </Button>
+            <Divider sx={{ my: 1 }} />
+            <Button
+              variant={tab === "students-list" ? "contained" : "outlined"}
               onClick={() => setTab("students-list")}
-              title="Students List"
+              fullWidth
+              sx={{ justifyContent: 'flex-start' }}
             >
               Students List
-            </button>
-
-            <button
-              className={`side-item ${
-                tab === "upload-students" ? "active" : ""
-              }`}
+            </Button>
+            <Button
+              variant={tab === "upload-students" ? "contained" : "outlined"}
               onClick={() => setTab("upload-students")}
-              title="Upload Students"
+              fullWidth
+              sx={{ justifyContent: 'flex-start' }}
             >
               Upload Students
-            </button>
-          </div>
-          <div className="admin-main">
-            <div className="admin-content">
-              {tab === "upload-students" && (
-                <div className="card">
-                  <p>
-                    Please upload an Excel file with a sheet named{" "}
-                    <strong>Students</strong>. The sheet must include the
-                    columns: Roll No, Name, DOB (YYYY-MM-DD), Grade, Section.
-                  </p>
-                  <p>
-                    <strong>Example:</strong> 1234 | John Doe | Grade 4 | A
-                  </p>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 10,
-                      alignItems: "center",
-                      width: "100%",
-                    }}
-                  >
-                    <input
-                      ref={studentInputRef}
-                      type="file"
-                      accept=".xlsx,.xls"
-                      onChange={(e) => {
-                        const f = e.currentTarget.files?.[0] || null;
-                        setStudentFile(f);
-                      }}
-                      style={{ flex: 1, marginTop: 0 }}
-                    />
-                    <button
-                      className="secondary"
-                      disabled={!studentFile || uploadingStudents}
-                      onClick={() =>
-                        studentFile && handleUploadStudents(studentFile)
-                      }
-                      style={{
-                        marginLeft: "auto",
-                        width: "25%",
-                        marginTop: 0,
-                      }}
-                    >
-                      {uploadingStudents ? "Uploading..." : "Upload"}
-                    </button>
-                  </div>
-                </div>
+            </Button>
+          </Box>
+          <Box sx={{ flex: 1, p: 3, overflow: 'auto' }}>
+            {tab === "upload-students" && (
+                <Card sx={{ p: 3, mb: 3 }}>
+                  <CardContent>
+                    <Typography variant="body1" sx={{ mb: 2 }}>
+                      Please upload an Excel file with a sheet named{" "}
+                      <strong>Students</strong>. The sheet must include the
+                      columns: Roll No, Name, DOB (YYYY-MM-DD), Grade, Section.
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 2 }}>
+                      <strong>Example:</strong> 1234 | John Doe | Grade 4 | A
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                      <input
+                        ref={studentInputRef}
+                        type="file"
+                        accept=".xlsx,.xls"
+                        onChange={(e) => {
+                          const f = e.currentTarget.files?.[0] || null;
+                          setStudentFile(f);
+                        }}
+                        style={{ flex: 1 }}
+                      />
+                      <Button
+                        variant="contained"
+                        disabled={!studentFile || uploadingStudents}
+                        onClick={() =>
+                          studentFile && handleUploadStudents(studentFile)
+                        }
+                        sx={{ minWidth: '120px' }}
+                      >
+                        {uploadingStudents ? "Uploading..." : "Upload"}
+                      </Button>
+                    </Box>
+                  </CardContent>
+                </Card>
               )}
 
               {tab === "upload-teachers" && (
-                <div className="card">
-                  <p>
-                    Please upload an Excel file with a sheet named{" "}
-                    <strong>Teachers</strong>. The sheet must include the
-                    columns: ID, Name, Class, Section, Pin (optional Secrete).
-                  </p>
-                  <p>
-                    <strong>Example:</strong> 1 | John Doe | Grade 4 | A | 1234
-                    | Grade 4 A.
-                  </p>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 10,
-                      alignItems: "center",
-                      width: "100%",
-                    }}
-                  >
-                    <input
-                      ref={teacherInputRef}
-                      type="file"
-                      accept=".xlsx,.xls"
-                      onChange={(e) => {
-                        const f = e.currentTarget.files?.[0] || null;
-                        setTeacherFile(f);
-                      }}
-                      style={{ flex: 1, marginTop: 0 }}
-                    />
-                    <button
-                      className="secondary"
-                      disabled={!teacherFile || uploadingTeachers}
-                      onClick={() =>
-                        teacherFile && handleUploadTeachers(teacherFile)
-                      }
-                      style={{
-                        marginLeft: "auto",
-                        width: "25%",
-                        marginTop: 0,
-                      }}
-                    >
-                      {uploadingTeachers ? "Uploading..." : "Upload"}
-                    </button>
-                  </div>
-                </div>
+                <Card sx={{ p: 3, mb: 3 }}>
+                  <CardContent>
+                    <Typography variant="body1" sx={{ mb: 2 }}>
+                      Please upload an Excel file with a sheet named{" "}
+                      <strong>Teachers</strong>. The sheet must include the
+                      columns: ID, Name, Class, Section, Pin.
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 2 }}>
+                      <strong>Example:</strong> 1 | John Doe | Grade 4 | A | 1234
+                      | Grade 4 A.
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                      <input
+                        ref={teacherInputRef}
+                        type="file"
+                        accept=".xlsx,.xls"
+                        onChange={(e) => {
+                          const f = e.currentTarget.files?.[0] || null;
+                          setTeacherFile(f);
+                        }}
+                        style={{ flex: 1 }}
+                      />
+                      <Button
+                        variant="contained"
+                        disabled={!teacherFile || uploadingTeachers}
+                        onClick={() =>
+                          teacherFile && handleUploadTeachers(teacherFile)
+                        }
+                        sx={{ minWidth: '120px' }}
+                      >
+                        {uploadingTeachers ? "Uploading..." : "Upload"}
+                      </Button>
+                    </Box>
+                  </CardContent>
+                </Card>
               )}
 
               {tab === "teachers-list" && (
-                <div className="card">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Class</th>
-                        <th>Section</th>
-                        <th>Pin</th>
-                        <th>Secrete</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {teachers.length === 0 && (
-                        <tr>
-                          <td colSpan={6} style={{ textAlign: "center" }}>
-                            No teachers
-                          </td>
-                        </tr>
-                      )}
-                      {teachers.map((t: TeacherRecord) => {
-                        const gradeText = t.grade || "-";
-                        const sectionText =
-                          (t.sections || []).join(", ") || "-";
-                        return (
-                          <tr key={t.id}>
-                            <td>{t.id}</td>
-                            <td>{t.name}</td>
-                            <td>{gradeText}</td>
-                            <td>{sectionText}</td>
-                            <td>{t.pin || "-"}</td>
-                            <td>{t.secrete || "-"}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <Card sx={{ mb: 3 }}>
+                  <CardContent>
+                    <DataTable
+                      data={teachers}
+                      columns={[
+                        { key: 'id', label: 'ID' },
+                        { key: 'name', label: 'Name' },
+                        {
+                          key: 'grade',
+                          label: 'Class',
+                          render: (value) => value || "-"
+                        },
+                        {
+                          key: 'sections',
+                          label: 'Section',
+                          render: (value) => (value || []).join(", ") || "-"
+                        },
+                        {
+                          key: 'pin',
+                          label: 'Pin',
+                          render: (value) => value || "-"
+                        },
+                        {
+                          key: 'secrete',
+                          label: 'Secrete',
+                          render: (value) => value || "-"
+                        },
+                      ]}
+                      emptyMessage="No teachers"
+                    />
+                  </CardContent>
+                </Card>
               )}
 
               {tab === "students-list" && (
-                <div className="card">
-                  <h2 className="table-header">Students List</h2>
-
-                  <div className="table-header">
-                    <select
-                      value={selectedGrade}
-                      onChange={(e) => setSelectedGrade(e.target.value)}
-                    >
-                      <option value="">All Classes</option>
-                      {grades.map((g) => (
-                        <option key={g} value={g}>
-                          {g}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Roll No.</th>
-                        <th>Name</th>
-                        <th>DOB</th>
-                        <th>Class</th>
-                        <th>Section</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredStudents.length === 0 && (
-                        <tr>
-                          <td colSpan={5} style={{ textAlign: "center" }}>
-                            No students
-                          </td>
-                        </tr>
-                      )}
-                      {filteredStudents.map((s: StudentRecord) => {
-                        const gradeText = (s.className || "-").trim() || "-";
-                        const sectionText = (s.section || "-").trim() || "-";
-                        return (
-                          <tr key={s.rollNumber}>
-                            <td>{s.rollNumber}</td>
-                            <td>{s.name || "-"}</td>
-                            <td>{s.dob || "-"}</td>
-                            <td>{gradeText}</td>
-                            <td>{sectionText}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <Card sx={{ mb: 3 }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ mb: 2 }}>
+                      Students List
+                    </Typography>
+                    <FormControl sx={{ mb: 2, minWidth: 200 }}>
+                      <InputLabel>Class Filter</InputLabel>
+                      <Select
+                        value={selectedGrade}
+                        label="Class Filter"
+                        onChange={(e) => setSelectedGrade(e.target.value)}
+                      >
+                        <MenuItem value="">
+                          <em>All Classes</em>
+                        </MenuItem>
+                        {grades.map((g) => (
+                          <MenuItem key={g} value={g}>
+                            {g}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <DataTable
+                      data={filteredStudents}
+                      columns={[
+                        { key: 'rollNumber', label: 'Roll No.' },
+                        {
+                          key: 'name',
+                          label: 'Name',
+                          render: (value) => value || "-"
+                        },
+                        {
+                          key: 'dob',
+                          label: 'DOB',
+                          render: (value) => value || "-"
+                        },
+                        {
+                          key: 'className',
+                          label: 'Class',
+                          render: (value) => (value || "-").trim() || "-"
+                        },
+                        {
+                          key: 'section',
+                          label: 'Section',
+                          render: (value) => (value || "-").trim() || "-"
+                        },
+                      ]}
+                      emptyMessage="No students"
+                    />
+                  </CardContent>
+                </Card>
               )}
               {notice && (
-                <div
-                  role="status"
-                  aria-live="polite"
-                  style={{
+                <Alert
+                  severity={noticeType === "success" ? "success" : "error"}
+                  sx={{
                     position: "fixed",
                     left: "50%",
                     bottom: "40%",
                     transform: "translateX(-50%)",
-                    background: "#fff",
-                    border: "1px solid #ddd",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-                    borderRadius: 8,
-                    padding: "8px 12px",
-                    color: noticeType === "success" ? "#2ea44f" : "#d33",
                     minWidth: 240,
-                    textAlign: "center",
                     zIndex: 1000,
                   }}
+                  role="status"
+                  aria-live="polite"
                 >
                   {notice}
-                </div>
+                </Alert>
               )}
-            </div>
-          </div>
-        </div>
+            </Box>
+        </Box>
       )}
     </>
   );

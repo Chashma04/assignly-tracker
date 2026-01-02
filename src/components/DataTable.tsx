@@ -14,7 +14,6 @@ import {
   Box,
   Typography,
 } from '@mui/material';
-import { Edit, Delete } from '@mui/icons-material';
 
 export interface TableColumn<T> {
   key: keyof T;

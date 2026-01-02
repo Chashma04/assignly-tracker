@@ -1,7 +1,11 @@
+import {
+  Box,
+  Typography,
+  Paper,
+} from "@mui/material";
 import type { Homework } from "../type";
 import HomeworkCard from "./HomeworkCard";
 import HomeworkTable from "./HomeworkTable";
-import "../styles/Homework.css";
 
 interface Props {
   homeworks: Homework[];
@@ -9,27 +13,40 @@ interface Props {
 }
 
 export default function StudentDashboard({ homeworks, setHomeworks }: Props) {
-  const updateHomework = (id: string, patch: Partial<Homework>) => {
-    setHomeworks((prev) =>
-      prev.map((h) => (h.id === id ? { ...h, ...patch } : h))
-    );
-  };
 
   return (
-    <div className="container max-w-xl mx-auto">
-      {/* <div className="student-container"> */}
+    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
+      <Paper elevation={2} sx={{ p: 3 }}>
+        <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 3 }}>
+          Student Dashboard
+        </Typography>
 
-      <h2>Student Dashboard</h2>
+        <Box sx={{ mb: 4 }}>
+          <HomeworkTable homeworks={homeworks} />
+        </Box>
 
-      <HomeworkTable homeworks={homeworks} />
+        {homeworks.length === 0 && (
+          <Typography variant="body1" color="textSecondary" align="center" sx={{ py: 4 }}>
+            No homework available
+          </Typography>
+        )}
 
-      {homeworks.length === 0 && <p>No homework available</p>}
-
-      {homeworks.map((hw) => (
-        <HomeworkCard key={hw.id} hw={hw} />
-      ))}
-      {/* </div> */}
-    </div>
+        {homeworks.length > 0 && (
+          <Box>
+            <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 2 }}>
+              Homework Details
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+              {homeworks.map((hw) => (
+                <Box key={hw.id} sx={{ flex: '1 1 300px', maxWidth: '400px' }}>
+                  <HomeworkCard hw={hw} />
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+      </Paper>
+    </Box>
   );
 }
 export {};

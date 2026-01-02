@@ -1,7 +1,18 @@
-import { useEffect, useRef, useState } from "react";
-import type { Homework } from "../type";
-import "../styles/Controls.css";
+import {
+  Box,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  TextField,
+  Typography
+} from "@mui/material";
+import { useEffect, useState } from "react";
+import ErrorAlert from "../components/ErrorAlert";
+import LoadingButton from "../components/LoadingButton";
 import { addHomework } from "../services/db";
+import type { Homework } from "../type";
 
 interface Props {
   homeworks: Homework[];
@@ -28,7 +39,8 @@ export default function TeacherForm({
     date: "",
   });
   const [error, setError] = useState<string>("");
-  const dateInputRef = useRef<HTMLInputElement | null>(null);
+  const [loading, setLoading] = useState(false);
+
   const todayStr = (() => {
     const d = new Date();
     const y = d.getFullYear();
@@ -62,136 +74,150 @@ export default function TeacherForm({
       return;
     }
 
-    if (editing) {
-      const updated: Homework = {
-        ...editing,
-        className: form.className,
-        subject: form.subject,
-        description: form.description,
-        date: form.date,
-        teacher: teacherName ?? editing.teacher,
-      };
-      // Optimistic update
-      setHomeworks((prev) => prev.map((h) => (h.id === updated.id ? updated : h)));
-      try {
-        const { updateHomework } = await import("../services/db");
-        await updateHomework(updated);
-      } catch (e) {
-        console.warn("Failed to update homework in Firestore", e);
-      }
-      onDoneEditing?.();
-      setError("");
-    } else {
-      const newHw: Homework = {
-        id: `${Date.now()}`,
-        className: form.className,
-        subject: form.subject,
-        description: form.description,
-        date: form.date,
-        status: "pending",
-        teacher: teacherName,
-      };
+    setLoading(true);
+    setError("");
 
-      // Optimistically update UI
-      setHomeworks([newHw, ...homeworks]);
-      // Persist to Firestore
-      try {
-        await addHomework(newHw);
-      } catch (e) {
-        console.warn("Failed to save homework to Firestore", e);
-      }
+    try {
+      if (editing) {
+        const updated: Homework = {
+          ...editing,
+          className: form.className,
+          subject: form.subject,
+          description: form.description,
+          date: form.date,
+          teacher: teacherName ?? editing.teacher,
+        };
+        // Optimistic update
+        setHomeworks((prev) => prev.map((h) => (h.id === updated.id ? updated : h)));
+        try {
+          const { updateHomework } = await import("../services/db");
+          await updateHomework(updated);
+        } catch (e) {
+          console.warn("Failed to update homework in Firestore", e);
+        }
+        onDoneEditing?.();
+      } else {
+        const newHw: Homework = {
+          id: `${Date.now()}`,
+          className: form.className,
+          subject: form.subject,
+          description: form.description,
+          date: form.date,
+          status: "pending",
+          teacher: teacherName,
+        };
 
-      setForm({ className: "", subject: "", description: "", date: "" });
-      setError("");
+        // Optimistically update UI
+        setHomeworks([newHw, ...homeworks]);
+        // Persist to Firestore
+        try {
+          await addHomework(newHw);
+        } catch (e) {
+          console.warn("Failed to save homework to Firestore", e);
+        }
+
+        setForm({ className: "", subject: "", description: "", date: "" });
+      }
+    } catch (err) {
+      setError("Failed to save homework. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="container max-w-xl mx-auto">
-      <h2>{editing ? "Edit Homework" : "Post Homework"}</h2>
+    <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
+      <Paper elevation={2} sx={{ p: 3 }}>
+        <Typography variant="h4" component="h1" gutterBottom align="center">
+          {editing ? "Edit Homework" : "Post Homework"}
+        </Typography>
 
-      <div className="card">
-        <label className="muted" style={{ fontWeight: 600, marginBottom: 6 }}>
-          Class <span style={{ color: "#d33" }}>*</span>
-        </label>
-        {assigned && assigned.length > 0 ? (
-          <select
-            value={form.className}
-            onChange={(e) => setForm({ ...form, className: e.target.value })}
-          >
-            <option value="">Select Grade/Section</option>
-            {assigned.map((a, idx) => {
-              const label = a.section ? `${a.grade} ${a.section}` : a.grade;
-              return (
-                <option key={`${label}-${idx}`} value={label}>
-                  {label}
-                </option>
-              );
-            })}
-          </select>
-        ) : (
-          <input
-            placeholder="Class (Grade 1)"
-            value={form.className}
-            onChange={(e) => setForm({ ...form, className: e.target.value })}
+        <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {assigned && assigned.length > 0 ? (
+            <FormControl fullWidth required>
+              <InputLabel>Class</InputLabel>
+              <Select
+                value={form.className}
+                label="Class"
+                onChange={(e) => setForm({ ...form, className: e.target.value })}
+              >
+                <MenuItem value="">
+                  <em>Select Grade/Section</em>
+                </MenuItem>
+                {assigned.map((a, idx) => {
+                  const label = a.section ? `${a.grade} ${a.section}` : a.grade;
+                  return (
+                    <MenuItem key={`${label}-${idx}`} value={label}>
+                      {label}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
+          ) : (
+            <TextField
+              label="Class"
+              placeholder="Class (Grade 1)"
+              value={form.className}
+              onChange={(e) => setForm({ ...form, className: e.target.value })}
+              required
+              fullWidth
+            />
+          )}
+
+          <TextField
+            label="Subject"
+            placeholder="Subject"
+            value={form.subject}
+            onChange={(e) => setForm({ ...form, subject: e.target.value })}
+            required
+            fullWidth
           />
-        )}
-        <label className="muted" style={{ fontWeight: 600, marginTop: 8 }}>
-          Subject <span style={{ color: "#d33" }}>*</span>
-        </label>
-        <input
-          placeholder="Subject"
-          value={form.subject}
-          onChange={(e) => setForm({ ...form, subject: e.target.value })}
-        />
-        <label className="muted" style={{ fontWeight: 600, marginTop: 8 }}>
-          Homework description <span style={{ color: "#d33" }}>*</span>
-        </label>
-        <textarea
-          placeholder="Homework description"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-        />
-        <div
-          onClick={() => {
-            if (dateInputRef.current) {
-              // Prefer native date picker if supported
-              // @ts-ignore: showPicker not in all TS lib targets
-              dateInputRef.current.showPicker?.();
-              dateInputRef.current.focus();
-            }
-          }}
-          role="group"
-          aria-labelledby="due-date-label"
-          style={{ cursor: "pointer" }}
-       >
-          <label
-            id="due-date-label"
-            htmlFor="due-date"
-            className="muted"
-            style={{ fontWeight: 600, marginTop: 8 }}
-          >
-            Due Date <span style={{ color: "#d33" }}>*</span>
-          </label>
-          <input
-            ref={dateInputRef}
+
+          <TextField
+            label="Homework Description"
+            placeholder="Homework description"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            required
+            fullWidth
+            multiline
+            rows={4}
+          />
+
+          <TextField
+            label="Due Date"
             type="date"
-            id="due-date"
             value={form.date}
-            min={todayStr}
             onChange={(e) => setForm({ ...form, date: e.target.value })}
+            required
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ min: todayStr }}
           />
-        </div>
-        {error && (
-          <div
-            className="bg-red-50 border border-red-200 text-red-700 rounded"
-            style={{ padding: 10, marginTop: 10, fontSize: 14 }}
-          >
-            {error}
-          </div>
-        )}
-        <button onClick={handleSubmit}>{editing ? "Save Changes" : "Post Homework"}</button>
-      </div>
-    </div>
+
+          {error && (
+            <ErrorAlert
+              message={error}
+              severity="error"
+              onClose={() => setError("")}
+            />
+          )}
+
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+            <LoadingButton
+              variant="contained"
+              size="large"
+              loading={loading}
+              loadingText={editing ? "Saving..." : "Posting..."}
+              onClick={handleSubmit}
+              sx={{ minWidth: 200 }}
+            >
+              {editing ? "Save Changes" : "Post Homework"}
+            </LoadingButton>
+          </Box>
+        </Box>
+      </Paper>
+    </Box>
   );
 }

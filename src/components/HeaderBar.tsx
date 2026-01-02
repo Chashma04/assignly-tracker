@@ -1,26 +1,24 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import {
+  AdminPanelSettings,
+  ArrowBack,
+  Brightness4,
+  Brightness7
+} from "@mui/icons-material";
 import {
   AppBar,
-  Toolbar,
-  Typography,
-  IconButton,
-  Menu,
-  MenuItem,
   Avatar,
   Box,
   Button,
-  Switch,
   FormControlLabel,
+  IconButton,
+  Menu,
+  MenuItem,
+  Switch,
+  Toolbar,
+  Typography,
 } from "@mui/material";
-import {
-  Menu as MenuIcon,
-  Brightness4,
-  Brightness7,
-  AccountCircle,
-  AdminPanelSettings,
-  ArrowBack,
-} from "@mui/icons-material";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import type { User } from "../type";
 
 interface Props {
